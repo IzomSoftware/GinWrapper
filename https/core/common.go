@@ -2,7 +2,7 @@ package https_core
 
 import (
 	"fmt"
-	"github.com/SyNdicateFoundation/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"

@@ -3,7 +3,7 @@ package configuration
 import (
 	"os"
 
-	"github.com/SyNdicateFoundation/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
 
 	"github.com/BurntSushi/toml"
 )

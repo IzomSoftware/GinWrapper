@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/SyNdicateFoundation/GinWrapper/common/configuration"
-	"github.com/SyNdicateFoundation/GinWrapper/mysql"
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/mysql"
 	"github.com/gin-gonic/gin"
 )
 
