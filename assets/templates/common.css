@@ -1,0 +1,38 @@
+.gradient-bg {
+    background: linear-gradient(135deg, #000000 0%, #5a5a5a 50%, #000000 100%);
+}
+
+#projects-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+.card-hover {
+    transition: all 0.3s ease;
+}
+.card-hover:hover {
+     transform: translateY(-5px);
+     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+ }
+.nav-link::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    background: #454545;
+    transition: width .3s;
+}
+.nav-link:hover::after {
+    width: 100%;
+}
+@keyframes pulse {
+    0% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.7;
+    }
+}
