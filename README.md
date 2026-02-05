@@ -7,7 +7,7 @@ Once you have GOLang installed, you can now use GinWrapper in your project:
 
 ```go
 import (
-	"github.com/SyNdicateFoundation/GinWrapper/" 
+	"github.com/IzomSoftware/GinWrapper/" 
 )
 ```
 

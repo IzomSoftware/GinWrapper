@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/SyNdicateFoundation/GinWrapper/common/configuration"
-	"github.com/SyNdicateFoundation/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
 	_ "github.com/glebarez/go-sqlite"
 	"time"
 )

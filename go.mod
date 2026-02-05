@@ -1,4 +1,4 @@
-module github.com/SyNdicateFoundation/GinWrapper
+module github.com/IzomSoftware/GinWrapper
 
 go 1.24
 

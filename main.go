@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/SyNdicateFoundation/GinWrapper/common/configuration"
-	"github.com/SyNdicateFoundation/GinWrapper/common/logger"
-	httpscore "github.com/SyNdicateFoundation/GinWrapper/https/core"
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
+	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,7 +14,7 @@ var (
 )
 
 func main() {
-	logger.SetupLogger("SyNdicateWebsite")
+	logger.SetupLogger("Test Website")
 
 	// Adjust as needed
 	configuration.DefaultConfig =
@@ -24,7 +24,7 @@ func main() {
 				Enabled:      true,
 				Address:      "0.0.0.0",
 				Port:         2009,
-				APIUserAgent: "LiteGuard Client 1.0/b (Software)",
+				APIUserAgent: "Test Client 1.0/b (Software)",
 				TlsConfiguration: configuration.HttpsTlsConfiguration{
 					Enable:   false,
 					CertFile: "cert.pem",

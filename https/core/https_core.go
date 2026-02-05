@@ -3,8 +3,8 @@ package https_core
 import (
 	"fmt"
 
-	"github.com/SyNdicateFoundation/GinWrapper/common/configuration"
-	"github.com/SyNdicateFoundation/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
 
 	"github.com/gin-gonic/gin"
 )

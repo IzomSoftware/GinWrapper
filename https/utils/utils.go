@@ -3,7 +3,7 @@ package https_utils
 import (
 	"time"
 
-	"github.com/SyNdicateFoundation/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
 	"github.com/dgrijalva/jwt-go"
 )
 
