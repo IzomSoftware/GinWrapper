@@ -7,7 +7,13 @@ Once you have GOLang installed, you can now use GinWrapper in your project:
 
 ```go
 import (
-	"github.com/IzomSoftware/GinWrapper/" 
+	"net/http"
+
+	httpscore "github.com/IzomSoftware/GinWrapper/https/core" 
+	logger "github.com/IzomSoftware/GinWrapper/common/logger"
+	configuration "github.com/IzomSoftware/GinWrapper/common/configuration"
+
+	"github.com/gin-gonic/gin"
 )
 ```
 
@@ -33,7 +39,7 @@ func main() {
 				Enabled:      true,
 				Address:      "0.0.0.0",
 				Port:         2009,
-				APIUserAgent: "LiteGuard Client 1.0/b (Software)",
+				APIUserAgent: "Test Client 1.0/b (Software)",
 				TlsConfiguration: configuration.HttpsTlsConfiguration{
 					Enable:   false,
 					CertFile: "cert.pem",
