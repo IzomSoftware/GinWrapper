@@ -91,6 +91,8 @@ func main() {
 	HttpsServer.ListenAndServe("assets/templates/*", "/assets")
 }
 ```
+An example is also available here:
+https://github.com/IzomSoftware/IzomWebsite
 
 ## Contribution Guidelines 🤝
 
