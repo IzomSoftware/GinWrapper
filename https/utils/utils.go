@@ -1,38 +1,45 @@
 package https_utils
 
 import (
-	"time"
+    "time"
 
-	"github.com/IzomSoftware/GinWrapper/common/configuration"
-	"github.com/dgrijalva/jwt-go"
+    "github.com/IzomSoftware/GinWrapper/common/configuration"
+    "github.com/golang-jwt/jwt/v5"
 )
 
 var secret = []byte(configuration.ConfigHolder.Tokenizer.TokenizerSecret)
 
 type User struct {
-	Username string `json:"username"`
-	jwt.StandardClaims
+    Username string `json:"username"`
+    jwt.RegisteredClaims
 }
 
 func GenerateToken(id string, exp time.Duration) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, User{
-		Username: id,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(exp).Unix(),
-		},
-	})
-	return token.SignedString(secret)
+    claims := User{
+        Username: id,
+        RegisteredClaims: jwt.RegisteredClaims{
+            ExpiresAt: jwt.NewNumericDate(time.Now().Add(exp)),
+            IssuedAt:  jwt.NewNumericDate(time.Now()),
+            NotBefore: jwt.NewNumericDate(time.Now()),
+        },
+    }
+
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return token.SignedString(secret)
 }
 
-func ParseToken(token string) (string, error) {
-	tk, err := jwt.ParseWithClaims(token, &User{}, func(tk *jwt.Token) (interface{}, error) {
-		return secret, nil
-	})
-	if err != nil {
-		return "", err
-	}
-	if claim, ok := tk.Claims.(*User); ok && tk.Valid {
-		return claim.Username, nil
-	}
-	return "", err
+func ParseToken(tokenString string) (string, error) {
+    token, err := jwt.ParseWithClaims(tokenString, &User{}, func(token *jwt.Token) (interface{}, error) {
+        return secret, nil
+    })
+
+    if err != nil {
+        return "", err
+    }
+
+    if claims, ok := token.Claims.(*User); ok && token.Valid {
+        return claims.Username, nil
+    }
+
+    return "", jwt.ErrSignatureInvalid
 }
