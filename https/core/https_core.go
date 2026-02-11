@@ -21,7 +21,7 @@ func middleware(context *gin.Context) {
 	if !configuration.ConfigHolder.SQLLiteConfiguration.Enabled {
 		for _, req := range Responses {
 			for _, address := range req.Addresses {
-				if req.Protected && connectionRequest == address {
+				if connectionRequest == address {
 					req.OnProtected(context)
 				}
 			}
