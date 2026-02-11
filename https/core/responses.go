@@ -27,6 +27,11 @@ var (
 	}
 )
 
+func BanConnection(ip string, c *gin.Context) {
+	c.AbortWithStatus(http.StatusForbidden)
+	mysql.BanIp(ip)
+}
+
 func (R *Response) OnProtected(c *gin.Context) {
 	if !R.Protected {
 		return
@@ -36,13 +41,11 @@ func (R *Response) OnProtected(c *gin.Context) {
 	apiUserAgent := configuration.ConfigHolder.HTTPSServer.APIUserAgent
 	ip := c.ClientIP()
 
-	fmt.Println(userAgent, " ", apiUserAgent)
-
-	if userAgent != apiUserAgent {
-		c.AbortWithStatus(http.StatusForbidden)
-		if userAgent != apiUserAgent {
-			mysql.BanIp(ip)
-		}
+	// Check for user agent
+	if userAgent == apiUserAgent {
 		return
 	}
+	// Check for 
+
+	BanConnection(ip, c)
 }

@@ -42,40 +42,12 @@ func main() {
 	// add responses
 	httpscore.Responses["index"] = httpscore.Response{
 		Fn: func(c *gin.Context) {
-			c.HTML(http.StatusOK, "index.html", nil)
+			c.String(http.StatusOK, "test", nil)
 		},
 		Method:    "GET",
 		Addresses: []string{"/", "/index.html"},
 	}
-	httpscore.Responses["projects"] = httpscore.Response{
-		Fn: func(c *gin.Context) {
-			c.HTML(http.StatusOK, "projects.html", nil)
-		},
-		Method:    "GET",
-		Addresses: []string{"/projects", "/projects.html"},
-	}
-	httpscore.Responses["projects"] = httpscore.Response{
-		Fn: func(c *gin.Context) {
-			c.HTML(http.StatusOK, "members.html", nil)
-		},
-		Method:    "GET",
-		Addresses: []string{"/members", "/members.html"},
-	}
-	httpscore.Responses["technologies"] = httpscore.Response{
-		Fn: func(c *gin.Context) {
-			c.HTML(http.StatusOK, "technologies.html", nil)
-		},
-		Method:    "GET",
-		Addresses: []string{"/technologies", "/technologies.html"},
-	}
-	httpscore.Responses["colleagues"] = httpscore.Response{
-		Fn: func(c *gin.Context) {
-			c.HTML(http.StatusOK, "colleagues.html", nil)
-		},
-		Method:    "GET",
-		Addresses: []string{"/colleagues", "/colleagues.html"},
-	}
 
 	// first argument is templateDir and second one is assetsDir
-	HttpsServer.ListenAndServe("assets/templates/*", "/assets")
+	HttpsServer.ListenAndServe("./*", "./")
 }

@@ -1,0 +1,19 @@
+debug = false
+
+[https_server]
+  enabled = true
+  address = "0.0.0.0"
+  port = 2009
+  api_user_agent = "Test Client 1.0/b (Software)"
+  [https_server.tls_configuration]
+    enable = false
+    cert_file = "cert.pem"
+    key_file = "key.pem"
+
+[database]
+  enabled = false
+  file_location = "db.sqlite"
+
+[tokenizer]
+  tokenizer_secret = ""
+  token_expiration = 0
