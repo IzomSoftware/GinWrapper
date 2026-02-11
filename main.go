@@ -5,6 +5,7 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/common/configuration"
 	"github.com/IzomSoftware/GinWrapper/common/logger"
+	utils "github.com/IzomSoftware/GinWrapper/https/utils"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
 	"github.com/gin-gonic/gin"
 )
@@ -12,10 +13,10 @@ import (
 var (
 	HttpsServer httpscore.HttpsServer
 )
-
 func main() {
 	logger.SetupLogger("Test Website")
 
+	secret, _ := utils.GenerateRandomSecret(32)
 	// Adjust as needed
 	configuration.DefaultConfig =
 		configuration.Holder{
@@ -24,7 +25,6 @@ func main() {
 				Enabled:      true,
 				Address:      "0.0.0.0",
 				Port:         2009,
-				APIUserAgent: "Test Client 1.0/b (Software)",
 				TlsConfiguration: configuration.HttpsTlsConfiguration{
 					Enable:   false,
 					CertFile: "cert.pem",
@@ -34,6 +34,13 @@ func main() {
 			SQLLiteConfiguration: configuration.SQLLiteConfiguration{
 				Enabled:              false,
 				DatabaseFileLocation: "db.sqlite",
+			},
+			Protections: configuration.Protections {
+				APIUserAgent: "Test Client 1.0/b (Software)",
+				Tokenizer: configuration.Tokenizer {
+					TokenizerSecret: secret,
+					TokenExpiration: 60,
+				},
 			},
 		}
 	// setup configuration
