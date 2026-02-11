@@ -1,7 +1,7 @@
 package https_core
 
 import (
-	"fmt"
+
 	"net/http"
 
 	"github.com/IzomSoftware/GinWrapper/common/configuration"
