@@ -1,21 +1,53 @@
-MIT License
+SPDX-License-Identifier: LicenseRef-IzomDotNet-Permissive
 
-Copyright (c) 2026 Izom Software
+Izom.Net Permissive License
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+---
+Summary (Non-Binding)
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+- Permission is granted to use, copy, modify, merge, publish, distribute, and sublicense the Project.
+- No commercial restriction: you may use internally or commercially without obligation to purchase a license.
+- Attribution notice is required for redistribution.
+- This license is NOT OSI-approved.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+---
+
+Definitions
+
+1. “Organization” means Izom.Net Global.
+2. “You” means any individual or legal entity exercising rights under this license.
+3. “Project” means the software, including source code, object code, binaries, libraries, and any derivative works thereof.
+4. “Public Distribution” means making the Project or any derivative available to third parties, directly or indirectly, including but not limited to:
+   (a) public websites,
+   (b) hosted or managed services (including SaaS),
+   (c) commercial products or services,
+   (d) distribution to customers, partners, or affiliates.
+---
+
+General Terms
+
+A. Use of the Project outside the scope of an applicable license is unlicensed.
+B. Attribution: You may redistribute the Project with or without modification, but must include a notice attributing the Project to Izom.Net Global.
+C. Warranty Disclaimer: The Project is provided "as is," without warranty of any kind.
+D. Future License Updates: The Organization may modify or replace this license at any time. Any new version or terms of the license apply retroactively to all previous versions of the Project.
+
+---
+
+1. Permission is granted to use, copy, modify, merge, publish, distribute, and sublicense the Project.
+2. No commercial restriction: you may use internally or commercially without obligation to purchase a license.
+3. Attribution notice is required for redistribution.
+
+---
+
+Reservation of Rights
+
+All rights not expressly granted to You are reserved by the Organization.
+
+---
+
+Governing Law
+
+This license shall be governed by and construed in accordance with the laws
+specified in the applicable Commercial License agreement, or, in the absence
+of such agreement, the laws of the Organization’s principal place of business.
+
