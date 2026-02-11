@@ -9,17 +9,16 @@ import (
 )
 
 // HTTPSServer -------------- HTTPS config holders --------------
-type HTTPSServer struct {
-	Enabled          bool                  `toml:"enabled"`
-	Address          string                `toml:"address"`
-	Port             int                   `toml:"port"`
-	APIUserAgent     string                `toml:"api_user_agent"`
-	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
-}
 type HttpsTlsConfiguration struct {
 	Enable   bool   `toml:"enable"`
 	CertFile string `toml:"cert_file"`
 	KeyFile  string `toml:"key_file"`
+}
+type HTTPSServer struct {
+	Enabled          bool                  `toml:"enabled"`
+	Address          string                `toml:"address"`
+	Port             int                   `toml:"port"`
+	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
 }
 
 // SQLLiteConfiguration -------------- SQLLite config holders --------------
@@ -33,11 +32,16 @@ type Tokenizer struct {
 	TokenExpiration int    `toml:"token_expiration"`
 }
 
+type Protections struct {
+	Tokenizer            Tokenizer            `toml:"tokenizer"`
+	APIUserAgent     string             `toml:"api_user_agent"`
+}
+
 type Holder struct {
 	Debug                bool                 `toml:"debug"`
 	HTTPSServer          HTTPSServer          `toml:"https_server"`
 	SQLLiteConfiguration SQLLiteConfiguration `toml:"database"`
-	Tokenizer            Tokenizer            `toml:"tokenizer"`
+	Protections			 Protections	      `toml:"protections"`
 }
 
 var ConfigHolder Holder
