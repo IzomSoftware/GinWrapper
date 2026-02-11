@@ -2,8 +2,10 @@ package https_core
 
 import (
 	"fmt"
-	"github.com/IzomSoftware/GinWrapper/common/logger"
 	"time"
+
+	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/common/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +18,7 @@ var lastLog time.Time
 var logs []string
 
 func Log() {
-	if !(len(logs) > 0) {
+	if len(logs) <= 0 {
 		return
 	}
 
@@ -27,10 +29,14 @@ func Log() {
 	logs = nil
 }
 func LogConnection(connection *gin.Context) {
+	if !configuration.ConfigHolder.Debug {
+		return
+	}
+	
 	formatted := fmt.Sprintf("[%s] -> %s", connection.ClientIP(), connection.FullPath())
 	logs = append(logs, formatted)
 
-	if !(time.Since(lastLog).Seconds() >= 5) {
+	if time.Since(lastLog).Seconds() < 5 {
 		go Log()
 	}
 

@@ -13,7 +13,9 @@ type Response struct {
 	Fn        gin.HandlerFunc
 	Method    string
 	Addresses []string
-	Protected bool
+	UserAgentProtected bool
+	TokenProtected bool
+	BanOnFail	bool
 }
 
 var (
@@ -33,19 +35,20 @@ func BanConnection(ip string, c *gin.Context) {
 }
 
 func (R *Response) OnProtected(c *gin.Context) {
-	if !R.Protected {
+	if !R.TokenProtected || !R.UserAgentProtected {
 		return
 	}
 
 	userAgent := c.Request.Header.Get("User-Agent")
-	apiUserAgent := configuration.ConfigHolder.HTTPSServer.APIUserAgent
+	apiUserAgent := configuration.ConfigHolder.Protections.APIUserAgent
 	ip := c.ClientIP()
 
 	// Check for user agent
-	if userAgent == apiUserAgent {
+	if R.UserAgentProtected && userAgent == apiUserAgent {
 		return
 	}
-	// Check for 
+
+	// TODO: add token check
 
 	BanConnection(ip, c)
 }
