@@ -1,4 +1,4 @@
-package utils
+package jwt_util
 
 import (
 	"crypto/rand"
@@ -13,15 +13,17 @@ import (
 
 type JWTUser struct {
 	Username string `json:"username"`
+	JWTType  string `json:"token_type"`
 	jwt.RegisteredClaims
 }
 
-type JWTTokenPair struct {
-	JWTAccessToken  string `json:"access_token"`
-	JWTRefreshToken string `json:"refresh_token"`
-	JWTTokenType    string `json:"token_type"`
-	JWTExpiresIn    int64  `json:"expires_in"`
+type JWTPair struct {
+	AccessJWT    string `json:"access_token"`
+	RefreshJWT   string `json:"refresh_token"`
+	JWTType      string `json:"token_type"`
+	JWTExpiresIn int64  `json:"expires_in"`
 }
+
 
 func GenerateJWTRandomSecret(size int) (string, error) {
 	bytes := make([]byte, size)
@@ -36,21 +38,19 @@ func GenerateJWTRandomSecret(size int) (string, error) {
 
 func getJWTSecret() ([]byte, error) {
 	secret := configuration.ConfigHolder.Protections.JWTProtection.JWTSecret
-
 	if secret == "" {
-		return nil, fmt.Errorf("Empty Secret")
+		return nil, fmt.Errorf("empty secret")
 	}
 
 	return base64.URLEncoding.DecodeString(secret)
 }
 
-func GenerateJWTToken(id string, exp time.Duration) (string, error) {
-	tokenId := uuid.NewString()
-
+func GenerateJWT(id string, tokenType string, exp time.Duration) (string, error) {
 	claims := JWTUser{
 		Username: id,
+		JWTType:  tokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        tokenId,
+			ID:        uuid.NewString(),
 			Subject:   id,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(exp)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -58,36 +58,34 @@ func GenerateJWTToken(id string, exp time.Duration) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	secret, err := getJWTSecret()
 	if err != nil {
 		return "", err
 	}
 
-	return token.SignedString(secret)
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(secret)
 }
 
-func GenerateJWTTokenPair(id string) (*JWTTokenPair, error) {
-	accessToken, err := GenerateJWTToken(id, 15*time.Minute)
+func GenerateJWTPair(id string) (*JWTPair, error) {
+	accessToken, err := GenerateJWT(id, "access", 15*time.Minute)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := GenerateJWTToken(id, 15*time.Minute)
+	refreshToken, err := GenerateJWT(id, "refresh", 7*24*time.Hour)
 	if err != nil {
 		return nil, err
 	}
 
-	return &JWTTokenPair{
-		JWTAccessToken:  accessToken,
-		JWTRefreshToken: refreshToken,
-		JWTTokenType:    "Bearer",
-		JWTExpiresIn:    900,
+	return &JWTPair{
+		AccessJWT:    accessToken,
+		RefreshJWT:   refreshToken,
+		JWTType:      "Bearer",
+		JWTExpiresIn: 900,
 	}, nil
 }
 
-func ParseToken(tokenString string) (*JWTUser, error) {
+func ParseJWT(tokenString string) (*JWTUser, error) {
 	secret, err := getJWTSecret()
 	if err != nil {
 		return nil, err
@@ -112,4 +110,30 @@ func ParseToken(tokenString string) (*JWTUser, error) {
 	}
 
 	return nil, jwt.ErrSignatureInvalid
+}
+
+func ValidateJWT(tokenString string) (*JWTUser, error) {
+    claims, err := ParseJWT(tokenString)
+    if err != nil {
+        return nil, err
+    }
+
+    if claims.JWTType != "access" {
+        return nil, fmt.Errorf("invalid token type")
+    }
+
+    return claims, nil
+}
+
+func ValidateRefreshToken(tokenString string) (*JWTUser, error) {
+    claims, err := ParseJWT(tokenString)
+    if err != nil {
+        return nil, err
+    }
+
+    if claims.JWTType != "refresh" {
+        return nil, fmt.Errorf("invalid token type")
+    }
+
+    return claims, nil
 }
