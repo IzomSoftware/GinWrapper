@@ -14,8 +14,8 @@ type Response struct {
 	Method    string
 	Addresses []string
 	UserAgentProtected bool
-	TokenProtected bool
-	BanOnFail	bool
+	JWTProtected bool
+	مکBanOnFail	bool
 }
 
 var (
@@ -35,7 +35,7 @@ func BanConnection(ip string, c *gin.Context) {
 }
 
 func (R *Response) OnProtected(c *gin.Context) {
-	if !R.TokenProtected || !R.UserAgentProtected {
+	if !R.JWTProtected || !R.UserAgentProtected {
 		return
 	}
 

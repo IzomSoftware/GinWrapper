@@ -16,7 +16,7 @@ var (
 func main() {
 	logger.SetupLogger("Test Website")
 
-	secret, _ := utils.GenerateRandomSecret(32)
+	secret, _ := utils.GenerateJWTRandomSecret(32)
 	// Adjust as needed
 	configuration.DefaultConfig =
 		configuration.Holder{
@@ -37,9 +37,9 @@ func main() {
 			},
 			Protections: configuration.Protections {
 				APIUserAgent: "Test Client 1.0/b (Software)",
-				Tokenizer: configuration.Tokenizer {
-					TokenizerSecret: secret,
-					TokenExpiration: 60,
+				JWTProtection: configuration.JWTProtection {
+					JWTSecret: secret,
+					JWTExpiration: 60,
 				},
 			},
 		}
