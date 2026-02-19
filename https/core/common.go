@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/common/configuration"
-	"github.com/IzomSoftware/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
 
 	"github.com/gin-gonic/gin"
 )

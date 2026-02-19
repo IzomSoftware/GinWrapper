@@ -3,8 +3,6 @@ package configuration
 import (
 	"os"
 
-	"github.com/IzomSoftware/GinWrapper/logger"
-
 	"github.com/BurntSushi/toml"
 )
 
@@ -21,7 +19,7 @@ type HTTPServer struct {
 }
 
 type DatabaseConfiguration struct {
-	Enabled              bool   `toml:"enabled"`
+	Enabled            bool   `toml:"enabled"`
 	SQLiteFileLocation string `toml:"sqlite_file_location"`
 }
 
@@ -35,37 +33,38 @@ type Protections struct {
 	APIUserAgent  string        `toml:"api_user_agent"`
 }
 
-type Holder struct {
+type Configuration struct {
 	Debug                 bool                  `toml:"debug"`
 	HTTPServer            HTTPServer            `toml:"http_server"`
 	DatabaseConfiguration DatabaseConfiguration `toml:"database"`
 	Protections           Protections           `toml:"protections"`
 }
 
-var ConfigHolder Holder
-var DefaultConfig = Holder{}
+var ConfigHolder Configuration
+var DefaultConfig = Configuration{}
 
-func SetupConfig(fileName string) {
+func SetupConfig(fileName string) error {
+	ConfigHolder = DefaultConfig
+
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		file, err := os.Create(fileName)
-		ConfigHolder = DefaultConfig
 		if err != nil {
-			logger.Logger.Error(err)
+			return err
 		}
-		defer func(file *os.File) {
 
-			if err := file.Close(); err != nil {
-				logger.Logger.Error(err)
-			}
-		}(file)
+		defer file.Close()
 
 		encoder := toml.NewEncoder(file)
 		if err := encoder.Encode(ConfigHolder); err != nil {
-			logger.Logger.Error(err)
+			return err
 		}
+
+		return nil
 	}
 
 	if _, err := toml.DecodeFile(fileName, &ConfigHolder); err != nil {
-		logger.Logger.Error(err)
+		return err
 	}
+
+	return nil
 }

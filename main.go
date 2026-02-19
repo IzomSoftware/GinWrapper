@@ -3,42 +3,43 @@ package main
 import (
 	"net/http"
 
-	"github.com/IzomSoftware/GinWrapper/common/configuration"
-	"github.com/IzomSoftware/GinWrapper/common/logger"
-	utils "github.com/IzomSoftware/GinWrapper/https/utils"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
+	utils "github.com/IzomSoftware/GinWrapper/https/utils"
+	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/gin-gonic/gin"
 )
 
 var (
 	HttpsServer httpscore.HttpsServer
 )
+
 func main() {
 	logger.SetupLogger("Test Website")
 
 	secret, _ := utils.GenerateJWTRandomSecret(32)
 	// Adjust as needed
 	configuration.DefaultConfig =
-		configuration.Holder{
+		configuration.CondigHolder{
 			Debug: false,
-			HTTPSServer: configuration.HTTPSServer{
-				Enabled:      true,
-				Address:      "0.0.0.0",
-				Port:         2009,
+			HTTPServer: configuration.HTTPServer{
+				Enabled: true,
+				Address: "0.0.0.0",
+				Port:    2009,
 				TlsConfiguration: configuration.HttpsTlsConfiguration{
 					Enable:   false,
 					CertFile: "cert.pem",
 					KeyFile:  "key.pem",
 				},
 			},
-			SQLLiteConfiguration: configuration.SQLLiteConfiguration{
-				Enabled:              false,
-				DatabaseFileLocation: "db.sqlite",
+			DatabaseConfiguration: configuration.DatabaseConfiguration{
+				Enabled:            false,
+				SQLiteFileLocation: "db.sqlite",
 			},
-			Protections: configuration.Protections {
+			Protections: configuration.Protections{
 				APIUserAgent: "Test Client 1.0/b (Software)",
-				JWTProtection: configuration.JWTProtection {
-					JWTSecret: secret,
+				JWTProtection: configuration.JWTProtection{
+					JWTSecret:     secret,
 					JWTExpiration: 60,
 				},
 			},
