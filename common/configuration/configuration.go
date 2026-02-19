@@ -27,21 +27,21 @@ type SQLLiteConfiguration struct {
 	DatabaseFileLocation string `toml:"file_location"`
 }
 
-type Tokenizer struct {
-	TokenizerSecret string `toml:"tokenizer_secret"`
-	TokenExpiration int    `toml:"token_expiration"`
+type JWTProtection struct {
+	JWTSecret     string `toml:"jwt_secret"`
+	JWTExpiration int    `toml:"jwt_expiration"`
 }
 
 type Protections struct {
-	Tokenizer            Tokenizer            `toml:"tokenizer"`
-	APIUserAgent     string             `toml:"api_user_agent"`
+	JWTProtection JWTProtection `toml:"jwt_protection"`
+	APIUserAgent  string        `toml:"api_user_agent"`
 }
 
 type Holder struct {
 	Debug                bool                 `toml:"debug"`
 	HTTPSServer          HTTPSServer          `toml:"https_server"`
 	SQLLiteConfiguration SQLLiteConfiguration `toml:"database"`
-	Protections			 Protections	      `toml:"protections"`
+	Protections          Protections          `toml:"protections"`
 }
 
 var ConfigHolder Holder
