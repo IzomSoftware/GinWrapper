@@ -1,13 +1,11 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
 	utils "github.com/IzomSoftware/GinWrapper/https/utils"
 	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -15,12 +13,12 @@ var (
 )
 
 func main() {
-	logger.SetupLogger("Test Website")
+	logger.SetupLogger("Test Website", logrus.DebugLevel)
 
 	secret, _ := utils.GenerateJWTRandomSecret(32)
 	// Adjust as needed
 	configuration.DefaultConfig =
-		configuration.CondigHolder{
+		configuration.Configuration{
 			Debug: false,
 			HTTPServer: configuration.HTTPServer{
 				Enabled: true,
@@ -48,13 +46,13 @@ func main() {
 	configuration.SetupConfig("config.toml")
 
 	// add responses
-	httpscore.Responses["index"] = httpscore.Response{
-		Fn: func(c *gin.Context) {
-			c.String(http.StatusOK, "test", nil)
-		},
-		Method:    "GET",
-		Addresses: []string{"/", "/index.html"},
-	}
+	// httpscore.Responses["index"] = httpscore.Response{
+	// 	Fn: func(c *gin.Context) {
+	// 		c.String(http.StatusOK, "test", nil)
+	// 	},
+	// 	Method:    "GET",
+	// 	Addresses: []string{"/", "/index.html"},
+	// }
 
 	// first argument is templateDir and second one is assetsDir
 	HttpsServer.ListenAndServe("./*", "./")

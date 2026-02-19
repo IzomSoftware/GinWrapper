@@ -7,17 +7,20 @@ import (
 )
 
 var Logger *logrus.Logger
-var name string
 
-func SetupLogger(appName string) {
+func SetupLogger(appName string, level logrus.Level) {
 	Logger = logrus.New()
-	name = appName
-	Logger.SetFormatter(&customFormat{})
-	Logger.SetLevel(logrus.DebugLevel)
+
+	Logger.SetFormatter(&customFormat{
+        AppName: appName,
+    })
+	Logger.SetLevel(level)
 }
 
-type customFormat struct{}
+type customFormat struct {
+    AppName string
+}
 
 func (F *customFormat) Format(ent *logrus.Entry) ([]byte, error) {
-	return []byte(fmt.Sprintf("[%s] [%s] %s\n", name, ent.Level.String(), ent.Message)), nil
+	return []byte(fmt.Sprintf("[%s] [%s] %s\n", F.AppName, ent.Level.String(), ent.Message)), nil
 }
