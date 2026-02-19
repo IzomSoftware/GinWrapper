@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core" 
-	logger "github.com/IzomSoftware/GinWrapper/common/logger"
-	configuration "github.com/IzomSoftware/GinWrapper/common/configuration"
+	logger "github.com/IzomSoftware/GinWrapper/logger"
+	configuration "github.com/IzomSoftware/GinWrapper/configuration"
 
 	"github.com/gin-gonic/gin"
 )

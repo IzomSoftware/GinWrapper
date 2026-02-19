@@ -3,8 +3,8 @@ package https_core
 import (
 	"fmt"
 
-	"github.com/IzomSoftware/GinWrapper/common/configuration"
-	"github.com/IzomSoftware/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,7 +18,7 @@ func middleware(context *gin.Context) {
 
 	//connectionRequest := context.Request.URL.Path
 
-	if !configuration.ConfigHolder.SQLLiteConfiguration.Enabled {
+	if !configuration.ConfigHolder.DatabaseConfiguration.Enabled {
 		/*for _, req := range Responses {
 			for _, address := range req.Addresses {
 				if connectionRequest == address {
@@ -32,7 +32,7 @@ func middleware(context *gin.Context) {
 }
 
 func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
-	httpConfig := configuration.ConfigHolder.HTTPSServer
+	httpConfig := configuration.ConfigHolder.HTTPServer
 
 	if !httpConfig.Enabled {
 		return
@@ -59,7 +59,7 @@ func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 		}
 	}
 
-	addr := fmt.Sprintf("%s:%d", configuration.ConfigHolder.HTTPSServer.Address, configuration.ConfigHolder.HTTPSServer.Port)
+	addr := fmt.Sprintf("%s:%d", configuration.ConfigHolder.HTTPServer.Address, configuration.ConfigHolder.HTTPServer.Port)
 
 	LogInfo(fmt.Sprintf("Listening on %s", addr))
 
