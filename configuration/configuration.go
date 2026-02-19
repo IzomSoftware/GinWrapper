@@ -3,28 +3,26 @@ package configuration
 import (
 	"os"
 
-	"github.com/IzomSoftware/GinWrapper/common/logger"
+	"github.com/IzomSoftware/GinWrapper/logger"
 
 	"github.com/BurntSushi/toml"
 )
 
-// HTTPSServer -------------- HTTPS config holders --------------
 type HttpsTlsConfiguration struct {
 	Enable   bool   `toml:"enable"`
 	CertFile string `toml:"cert_file"`
 	KeyFile  string `toml:"key_file"`
 }
-type HTTPSServer struct {
+type HTTPServer struct {
 	Enabled          bool                  `toml:"enabled"`
 	Address          string                `toml:"address"`
 	Port             int                   `toml:"port"`
 	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
 }
 
-// SQLLiteConfiguration -------------- SQLLite config holders --------------
-type SQLLiteConfiguration struct {
+type DatabaseConfiguration struct {
 	Enabled              bool   `toml:"enabled"`
-	DatabaseFileLocation string `toml:"file_location"`
+	SQLiteFileLocation string `toml:"sqlite_file_location"`
 }
 
 type JWTProtection struct {
@@ -38,10 +36,10 @@ type Protections struct {
 }
 
 type Holder struct {
-	Debug                bool                 `toml:"debug"`
-	HTTPSServer          HTTPSServer          `toml:"https_server"`
-	SQLLiteConfiguration SQLLiteConfiguration `toml:"database"`
-	Protections          Protections          `toml:"protections"`
+	Debug                 bool                  `toml:"debug"`
+	HTTPServer            HTTPServer            `toml:"http_server"`
+	DatabaseConfiguration DatabaseConfiguration `toml:"database"`
+	Protections           Protections           `toml:"protections"`
 }
 
 var ConfigHolder Holder
