@@ -1,4 +1,4 @@
-package https_utils
+package utils
 
 import (
 	"crypto/rand"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/common/configuration"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
