@@ -47,7 +47,7 @@ func (R *Response) OnProtected(c *gin.Context) {
 		return
 	}
 
-	// TODO: add token check
-
+	// TODO: add token check & rate limit check
+	c.Abort()
 	BanConnection(ip, c)
 }
