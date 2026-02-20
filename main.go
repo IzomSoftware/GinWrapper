@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
-	utils "github.com/IzomSoftware/GinWrapper/https/utils"
+	utils "github.com/IzomSoftware/GinWrapper/utils"
 	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/sirupsen/logrus"
 )
@@ -32,7 +32,10 @@ func main() {
 			},
 			DatabaseConfiguration: configuration.DatabaseConfiguration{
 				Enabled:            false,
-				SQLiteFileLocation: "db.sqlite",
+				SQLiteConfiguration: configuration.SQLiteConfiguration{
+					Enabled: true,
+					DatabaseLocation: "db.sqlite",
+				},
 			},
 			Protections: configuration.Protections{
 				APIUserAgent: "Test Client 1.0/b (Software)",

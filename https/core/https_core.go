@@ -16,16 +16,16 @@ type HttpsServer struct {
 func middleware(context *gin.Context) {
 	LogConnection(context)
 
-	//connectionRequest := context.Request.URL.Path
+	connectionRequest := context.Request.URL.Path
 
 	if !configuration.ConfigHolder.DatabaseConfiguration.Enabled {
-		/*for _, req := range Responses {
+		for _, req := range Responses {
 			for _, address := range req.Addresses {
 				if connectionRequest == address {
 					req.OnProtected(context)
 				}
 			}
-		}*/
+		}
 	}
 
 	context.Next()
