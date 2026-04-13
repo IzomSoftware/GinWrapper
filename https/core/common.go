@@ -2,43 +2,33 @@ package https_core
 
 import (
 	"fmt"
-	"time"
+	"net/http"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
 
+	// "github.com/IzomSoftware/GinWrapper/redis"
+	mysql "github.com/IzomSoftware/GinWrapper/sql"
 	"github.com/gin-gonic/gin"
 )
 
-func LogInfo(s string) {
-	logger.Logger.Info(fmt.Sprintf("[HTTPS] %s", s))
+
+func AbortConnection(ip string, c *gin.Context) {
+	logger.LogInfo(fmt.Sprintf("Connection %s is being aborted", ip))
+
+	c.AbortWithStatus(http.StatusForbidden)
 }
 
-var lastLog time.Time
-var logs []string
+func BanConnection(ip string, c *gin.Context) {
+	AbortConnection(ip, c)
 
-func Log() {
-	if len(logs) <= 0 {
-		return
-	}
+	logger.LogInfo(fmt.Sprintf("Connection %s is being banned", ip))
 
-	for _, log := range logs {
-		time.Sleep(time.Second * 3)
-		LogInfo(log)
+	if err := mysql.BanIP(ip); err != nil {
+		logger.LogInfo(fmt.Sprintf("Connection %s is already banned", ip))
 	}
-	logs = nil
 }
-func LogConnection(connection *gin.Context) {
-	if !configuration.ConfigHolder.Debug {
-		return
-	}
-	
-	formatted := fmt.Sprintf("[%s] -> %s", connection.ClientIP(), connection.FullPath())
-	logs = append(logs, formatted)
 
-	if time.Since(lastLog).Seconds() < 5 {
-		go Log()
-	}
-
-	lastLog = time.Now()
+func (R *Response) IsAnyProtectionEnabled() bool {
+	return R.Protections.UserAgent || R.Protections.JWT || R.Protections.RateLimit
 }
+

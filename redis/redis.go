@@ -14,6 +14,8 @@ import (
 var redisCl *redis.Client
 var redisCtx context.Context
 
+var RedisNotConfigured = fmt.Errorf("No redis implemnetation configured")
+
 /*
  * MiniRedis
  */
@@ -28,7 +30,7 @@ func InitEmbeddedRedis() (*miniredis.Miniredis, error) {
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
+	defer cancel()
 
 	redisCtx = ctx
 
@@ -69,26 +71,29 @@ func InitRedis(config configuration.RedisConfiguration) error {
 	redisCl = redis.NewClient(redisOpts)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
+	defer cancel()
 
 	redisCtx = ctx
-	
+
 	return nil
 }
 
 /*
  * Common Methods
  */
-func Init() {
+func Init() error {
 	config := configuration.ConfigHolder.DatabaseConfiguration
 
 	if config.EmbeddedRedisConfiguration.Enabled {
-		InitEmbeddedRedis()
+		_, err := InitEmbeddedRedis()
+		return err
 	}
 
 	if config.RedisConfiguration.Enabled {
-		InitRedis(config.RedisConfiguration)
+		return InitRedis(config.RedisConfiguration)
 	}
+	
+	return RedisNotConfigured
 }
 
 func SetRedisValue(name string, arg any) error {

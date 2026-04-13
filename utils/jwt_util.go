@@ -24,6 +24,9 @@ type JWTPair struct {
 	JWTExpiresIn int64  `json:"expires_in"`
 }
 
+var invalidTokenTypeError = fmt.Errorf("invalid token type")
+var unexpectedSigningMethod = fmt.Errorf("unexpected signing method")
+var emptySecretError = fmt.Errorf("empty secret")
 
 func GenerateJWTRandomSecret(size int) (string, error) {
 	bytes := make([]byte, size)
@@ -39,7 +42,7 @@ func GenerateJWTRandomSecret(size int) (string, error) {
 func getJWTSecret() ([]byte, error) {
 	secret := configuration.ConfigHolder.Protections.JWTProtection.JWTSecret
 	if secret == "" {
-		return nil, fmt.Errorf("empty secret")
+		return nil, emptySecretError
 	}
 
 	return base64.URLEncoding.DecodeString(secret)
@@ -93,7 +96,7 @@ func ParseJWT(tokenString string) (*JWTUser, error) {
 
 	token, err := jwt.ParseWithClaims(tokenString, &JWTUser{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method")
+			return nil, unexpectedSigningMethod
 		}
 		return secret, nil
 	},
@@ -113,27 +116,27 @@ func ParseJWT(tokenString string) (*JWTUser, error) {
 }
 
 func ValidateJWT(tokenString string) (*JWTUser, error) {
-    claims, err := ParseJWT(tokenString)
-    if err != nil {
-        return nil, err
-    }
+	claims, err := ParseJWT(tokenString)
+	if err != nil {
+		return nil, err
+	}
 
-    if claims.JWTType != "access" {
-        return nil, fmt.Errorf("invalid token type")
-    }
+	if claims.JWTType != "access" {
+		return nil, invalidTokenTypeError
+	}
 
-    return claims, nil
+	return claims, nil
 }
 
 func ValidateRefreshToken(tokenString string) (*JWTUser, error) {
-    claims, err := ParseJWT(tokenString)
-    if err != nil {
-        return nil, err
-    }
+	claims, err := ParseJWT(tokenString)
+	if err != nil {
+		return nil, err
+	}
 
-    if claims.JWTType != "refresh" {
-        return nil, fmt.Errorf("invalid token type")
-    }
+	if claims.JWTType != "refresh" {
+		return nil, invalidTokenTypeError
+	}
 
-    return claims, nil
+	return claims, nil
 }

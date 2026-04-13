@@ -14,11 +14,11 @@ type HttpsServer struct {
 }
 
 func middleware(context *gin.Context) {
-	LogConnection(context)
+	logger.LogConnection(context)
 
-	connectionRequest := context.Request.URL.Path
+	connectionRequest := context.FullPath()
 
-	if !configuration.ConfigHolder.DatabaseConfiguration.Enabled {
+	if configuration.IsStorageConfigured() {
 		for _, req := range Responses {
 			for _, address := range req.Addresses {
 				if connectionRequest == address {
@@ -45,23 +45,30 @@ func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 	H.Router.LoadHTMLGlob(templatesDir)
 	H.Router.Static(assetsDir, "."+assetsDir)
 
-	//Handling 404 error
-	if unknw, ok := Responses["not-found-screen"]; ok {
-		H.Router.NoRoute(unknw.Fn)
-		delete(Responses, "not-found-screen")
-	}
+	// Register No Route
+	H.Router.NoRoute(NoRoute)
 
-	//Registering the Paths and responses
+	isAnyJWTAPIUsed := false
+
+	// Registering the Paths and responses
 	for name, req := range Responses {
 		for _, address := range req.Addresses {
-			logger.Logger.Debug(fmt.Sprintf("Registering Route -> %s - %s <-", name, address))
-			H.Router.Handle(req.Method, address, req.Fn)
+			if req.Protections.JWT {
+				isAnyJWTAPIUsed = true
+			}
+			logger.Logger.Info(fmt.Sprintf("Registering Route -> %s - %s <-", name, address))
+			H.Router.Handle(req.Type, address, req.Handler)
 		}
+	}
+
+	// Register additional JWT Apis
+	if isAnyJWTAPIUsed {
+		ActivateJWTAPI()
 	}
 
 	addr := fmt.Sprintf("%s:%d", configuration.ConfigHolder.HTTPServer.Address, configuration.ConfigHolder.HTTPServer.Port)
 
-	LogInfo(fmt.Sprintf("Listening on %s", addr))
+	logger.Logger.Info(fmt.Sprintf("Listening on %s", addr))
 
 	var err error
 

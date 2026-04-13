@@ -1,10 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
-	utils "github.com/IzomSoftware/GinWrapper/utils"
 	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/redis"
+	"github.com/IzomSoftware/GinWrapper/sql"
+	utils "github.com/IzomSoftware/GinWrapper/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,47 +22,29 @@ func main() {
 	logger.SetupLogger("Test Website", logrus.DebugLevel)
 
 	secret, _ := utils.GenerateJWTRandomSecret(32)
+
 	// Adjust as needed
-	configuration.DefaultConfig =
-		configuration.Configuration{
-			Debug: false,
-			HTTPServer: configuration.HTTPServer{
-				Enabled: true,
-				Address: "0.0.0.0",
-				Port:    2009,
-				TlsConfiguration: configuration.HttpsTlsConfiguration{
-					Enable:   false,
-					CertFile: "cert.pem",
-					KeyFile:  "key.pem",
-				},
-			},
-			DatabaseConfiguration: configuration.DatabaseConfiguration{
-				Enabled:            false,
-				SQLiteConfiguration: configuration.SQLiteConfiguration{
-					Enabled: true,
-					DatabaseLocation: "db.sqlite",
-				},
-			},
-			Protections: configuration.Protections{
-				APIUserAgent: "Test Client 1.0/b (Software)",
-				JWTProtection: configuration.JWTProtection{
-					JWTSecret:     secret,
-					JWTExpiration: 60,
-				},
-			},
-		}
+	configuration.DefaultConfig.Protections.JWTProtection.JWTSecret = secret
+
+	config := configuration.DefaultConfig
+
 	// setup configuration
 	configuration.SetupConfig("config.toml")
 
+	// Intiialize storage sources
+	sql.Init()
+	redis.Init()
+
 	// add responses
-	// httpscore.Responses["index"] = httpscore.Response{
-	// 	Fn: func(c *gin.Context) {
-	// 		c.String(http.StatusOK, "test", nil)
-	// 	},
-	// 	Method:    "GET",
-	// 	Addresses: []string{"/", "/index.html"},
-	// }
+	httpscore.Responses["home"] = httpscore.Response{
+		Handler: func(c *gin.Context) {
+			c.String(http.StatusOK, "")
+		},
+		Type:        "GET",
+		Addresses:   []string{"/home", "/home/", "/kos/nago/kooni"},
+		Protections: httpscore.Protections{},
+	}
 
 	// first argument is templateDir and second one is assetsDir
-	HttpsServer.ListenAndServe("./*", "./")
+	HttpsServer.ListenAndServe(fmt.Sprintf("%s*", config.HTTPServer.TemplatesDir), config.HTTPServer.AssetsDir)
 }

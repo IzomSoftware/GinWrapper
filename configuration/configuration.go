@@ -16,6 +16,8 @@ type HTTPServer struct {
 	Enabled          bool                  `toml:"enabled"`
 	Address          string                `toml:"address"`
 	Port             int                   `toml:"port"`
+	TemplatesDir     string                `toml:"template_dir"`
+	AssetsDir        string                `toml:"assets_dir"`
 	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
 }
 
@@ -64,11 +66,10 @@ type RedisConfiguration struct {
 }
 
 type DatabaseConfiguration struct {
-	Enabled                    bool                       `toml:"enabled"`
 	SQLiteConfiguration        SQLiteConfiguration        `toml:"sqlite_configuration"`
 	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
 	MySQLConfiguration         MySQLConfiguration         `toml:"mysql_configuration"`
-	RedisConfiguration		RedisConfiguration	`toml:"redis_configuration"`
+	RedisConfiguration         RedisConfiguration         `toml:"redis_configuration"`
 }
 
 type JWTProtection struct {
@@ -77,8 +78,10 @@ type JWTProtection struct {
 }
 
 type Protections struct {
-	JWTProtection JWTProtection `toml:"jwt_protection"`
-	APIUserAgent  string        `toml:"api_user_agent"`
+	ProvideBasicProtections    bool          `toml:"provide_basic_protections"`
+	AggressiveBasicProtections bool          `toml:"aggressive_basic_protections"`
+	JWTProtection              JWTProtection `toml:"jwt_protection"`
+	APIUserAgent               string        `toml:"api_user_agent"`
 }
 
 type Configuration struct {
@@ -89,8 +92,79 @@ type Configuration struct {
 }
 
 var ConfigHolder Configuration
-var DefaultConfig = Configuration{}
+var DefaultConfig = Configuration{
+	Debug: false,
+	HTTPServer: HTTPServer{
+		Enabled:      true,
+		Address:      "0.0.0.0",
+		Port:         2009,
+		TemplatesDir: "./assets/templates/",
+		AssetsDir:    "./assets/",
+		TlsConfiguration: HttpsTlsConfiguration{
+			Enable:   false,
+			CertFile: "cert.pem",
+			KeyFile:  "key.pem",
+		},
+	},
+	DatabaseConfiguration: DatabaseConfiguration{
+		SQLiteConfiguration: SQLiteConfiguration{
+			Enabled:          true,
+			DatabaseLocation: "db.sqlite",
+		},
+		EmbeddedRedisConfiguration: EmbeddedRedisConfiguration{
+			Enabled: true,
+		},
+		MySQLConfiguration: MySQLConfiguration{
+			Enabled:                false,
+			Hostname:               "127.0.0.1",
+			Port:                   3306,
+			Username:               "root",
+			Password:               "",
+			Database:               "GinWrapper",
+			TLSEnabled:             true,
+			SkipTLSVerification:    true,
+			Charset:                "utf8mb4",
+			MaxOpenConnections:     151,
+			MaxIdleConnections:     10,
+			ConnectionsMaxLifetime: 3600,
+			ParseTime:              true,
+		},
+		RedisConfiguration: RedisConfiguration{
+			Enabled:             false,
+			Hostname:            "127.0.0.1",
+			Port:                6379,
+			Username:            "root",
+			Password:            "",
+			Database:            0,
+			PoolSize:            20,
+			MaxRetries:          5,
+			PoolTimeout:         1,
+			DialTimeout:         1,
+			ReadTimeout:         2,
+			WriteTimeoutSec:     3,
+			TLSEnabled:          true,
+			SkipTLSVerification: true,
+		},
+	},
+	Protections: Protections{
+		ProvideBasicProtections:    true,
+		AggressiveBasicProtections: true,
+		APIUserAgent:               "Test Client 1.0/b (Software)",
+		JWTProtection: JWTProtection{
+			JWTSecret:     "",
+			JWTExpiration: 60,
+		},
+	},
+}
+var cannotInitializeMultipleStorageSourcesAtOnce = fmt.Errorf("Can't enable multiple Redis/SQL based databases at once")
 
+func IsStorageConfigured() bool {
+	isRedisEnabled := ConfigHolder.DatabaseConfiguration.RedisConfiguration.Enabled || ConfigHolder.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled
+	isSqlEnabled := ConfigHolder.DatabaseConfiguration.MySQLConfiguration.Enabled || ConfigHolder.DatabaseConfiguration.SQLiteConfiguration.Enabled
+
+	return isRedisEnabled && isSqlEnabled
+
+}
 func SetupConfig(fileName string) error {
 	ConfigHolder = DefaultConfig
 
@@ -115,10 +189,10 @@ func SetupConfig(fileName string) error {
 	}
 
 	if (ConfigHolder.DatabaseConfiguration.MySQLConfiguration.Enabled &&
-	 ConfigHolder.DatabaseConfiguration.SQLiteConfiguration.Enabled) || 
-	 (ConfigHolder.DatabaseConfiguration.RedisConfiguration.Enabled && 
-		ConfigHolder.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled) {
-		return fmt.Errorf("Can't enable multiple Redis/SQL based databases at once")
+		ConfigHolder.DatabaseConfiguration.SQLiteConfiguration.Enabled) ||
+		(ConfigHolder.DatabaseConfiguration.RedisConfiguration.Enabled &&
+			ConfigHolder.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled) {
+		return cannotInitializeMultipleStorageSourcesAtOnce
 	}
 
 	return nil

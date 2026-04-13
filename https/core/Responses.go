@@ -2,52 +2,122 @@ package https_core
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
-	mysql "github.com/IzomSoftware/GinWrapper/sql"
 	"github.com/gin-gonic/gin"
 )
 
+type Protections struct {
+	/*
+	 * Contains protections as basic as path check.
+	 * Example: if path is /api/auth or /api/ (and is it malicious?)
+	 */
+	BasicProtections bool
+	UserAgent        bool
+	JWT              bool
+	RateLimit        bool
+	Ban              bool
+}
+
 type Response struct {
-	Fn                 gin.HandlerFunc
-	Method             string
-	Addresses          []string
-	UserAgentProtected bool
-	JWTProtected       bool
-	مکBanOnFail        bool
+	Handler     gin.HandlerFunc
+	Type        string
+	Addresses   []string
+	Protections Protections
 }
 
 var (
-	Responses = map[string]Response{
-		"not-found-screen": {
-			Fn: func(c *gin.Context) {
-				c.HTML(http.StatusNotFound, "not-found.html", nil)
-			},
-			Method: "GET",
-		},
-	}
+	Responses    = map[string]Response{}
+	NoRouteRoute = func(c *gin.Context) { c.String(http.StatusNotFound, "404 Not Found") }
 )
 
-func BanConnection(ip string, c *gin.Context) {
-	c.AbortWithStatus(http.StatusForbidden)
-	mysql.BanIP(ip)
+func NoRoute(c *gin.Context) {
+	if configuration.ConfigHolder.Protections.ProvideBasicProtections {
+		path := c.Request.URL.Path
+		basePath := strings.Split(path, "/")[1]
+
+		for _, response := range Responses {
+			for _, address := range response.Addresses {
+				if strings.Contains(address, basePath) {
+					ip := c.ClientIP()
+
+					AbortConnection(ip, c)
+
+					if configuration.ConfigHolder.Protections.AggressiveBasicProtections {
+						BanConnection(ip, c)
+					}
+
+					return
+				}
+			}
+		}
+	}
+
+	NoRouteRoute(c)
+}
+
+func ActivateJWTAPI() {
+	Responses["JWTApiAuth"] = Response{
+		Handler: func(c *gin.Context) {
+			c.JSON(http.StatusOK, "")
+		},
+		Type:      "GET",
+		Addresses: []string{"/api/auth"},
+		Protections: Protections{
+			BasicProtections: true,
+			RateLimit:        true,
+		},
+	}
+
+	Responses["JWTAPIValidate"] = Response{
+		Handler: func(c *gin.Context) {
+			c.JSON(http.StatusForbidden, "")
+		},
+		Type:      "GET",
+		Addresses: []string{},
+		Protections: Protections{
+			BasicProtections: true,
+			RateLimit:        true,
+		},
+	}
 }
 
 func (R *Response) OnProtected(c *gin.Context) {
-	if !R.JWTProtected || !R.UserAgentProtected {
+	response := R
+
+	if !response.IsAnyProtectionEnabled() {
 		return
 	}
 
-	userAgent := c.Request.Header.Get("User-Agent")
-	apiUserAgent := configuration.ConfigHolder.Protections.APIUserAgent
+	protections := response.Protections
 	ip := c.ClientIP()
+	header := c.Request.Header
 
-	// Check for user agent
-	if R.UserAgentProtected && userAgent == apiUserAgent {
+	// Path check
+	// if response.Protections.BasicProtections {
+
+	// }
+
+	// User agent check
+	if userAgent, apiUserAgent := header.Get("User-Agent"),
+		configuration.ConfigHolder.Protections.APIUserAgent;
+
+	// The actual check, if user agent is valid, perform no further action
+	protections.UserAgent && userAgent == apiUserAgent {
 		return
 	}
 
-	// TODO: add token check & rate limit check
-	c.Abort()
-	BanConnection(ip, c)
+	if response.Protections.JWT {
+		// Redirect to auth API
+		// TODO: more logic here
+	}
+
+	// if response.RateLimit {
+	// 	//
+	// }
+
+	if protections.Ban {
+		BanConnection(ip, c)
+	}
 }

@@ -13,7 +13,13 @@ import (
 )
 
 var dbPool *sql.DB
-var unexpectedTypeError = fmt.Errorf("Unexpected type for value")
+
+var UnexpectedTypeError = fmt.Errorf("Unexpected type for value")
+var SQLNotConfigured = fmt.Errorf("No SQL implementation configured")
+var HWIDAlreadyBanned = fmt.Errorf("HWID is already banned")
+var IPAlreadyBanned = fmt.Errorf("IP is already banned")
+var UserAlreadyBanned = fmt.Errorf("User is already banned")
+var UserAlreadyExists = fmt.Errorf("User already exists")
 
 /*
  * SQLite
@@ -91,7 +97,7 @@ func Init() error {
 		return InitMySQL(databaseConfig.MySQLConfiguration)
 	}
 
-	panic("Unreachable state")
+	return SQLNotConfigured
 }
 
 func ExecuteUpdate(query string, args ...any) error {
@@ -123,6 +129,7 @@ func GetData(query string, args ...any) (any, error) {
 func PingDatabase() error {
 	return dbPool.Ping()
 }
+
 func SetupTables() error {
 	_, err := dbPool.Exec(`
 		CREATE TABLE IF NOT EXISTS Users (
@@ -185,7 +192,7 @@ func CheckUsernameExists(username string) (bool, error) {
 
 	val, ok := result.(int64)
 	if !ok {
-		return false, unexpectedTypeError
+		return false, UnexpectedTypeError
 	}
 
 	return val > 0, nil
@@ -199,7 +206,7 @@ func CheckUserExists(uuid string) (bool, error) {
 
 	val, ok := result.(int64)
 	if !ok {
-		return false, unexpectedTypeError
+		return false, UnexpectedTypeError
 	}
 
 	return val > 0, nil
@@ -213,7 +220,7 @@ func CheckIsUserBanned(uuid string) (bool, error) {
 
 	val, ok := result.(int64)
 	if !ok {
-		return false, unexpectedTypeError
+		return false, UnexpectedTypeError
 	}
 
 	return val == 1, nil
@@ -227,7 +234,7 @@ func CheckIsBannedHWID(hwid string) (bool, error) {
 
 	val, ok := result.(int64)
 	if !ok {
-		return false, unexpectedTypeError
+		return false, UnexpectedTypeError
 	}
 
 	return val > 0, nil
@@ -241,7 +248,7 @@ func CheckIsBannedIP(ip string) (bool, error) {
 
 	val, ok := result.(int64)
 	if !ok {
-		return false, fmt.Errorf("Unexpected type for value")
+		return false, UnexpectedTypeError
 	}
 
 	return val > 0, nil
@@ -252,14 +259,15 @@ func CreateUser(username, password string) error {
 	if err != nil {
 		return err
 	}
+
 	if userExists {
-		return fmt.Errorf("Username already exists")
+		return UserAlreadyExists
 	}
 
 	uuid := uuid.NewString()
 	uuidExists, err := CheckUserExists(uuid)
 	if uuidExists {
-		return fmt.Errorf("User already exists")
+		return UserAlreadyExists
 	}
 
 	hash, err := HashPassword(password)
@@ -277,8 +285,9 @@ func BanUser(uuid string) error {
 	}
 
 	if result {
-		return fmt.Errorf("User is already banned")
+		return UserAlreadyBanned
 	}
+
 	return ExecuteUpdate("UPDATE Users SET banned = 1 WHERE id = ?", uuid)
 }
 
@@ -289,8 +298,9 @@ func BanIP(ip string) error {
 	}
 
 	if result {
-		return fmt.Errorf("IP is already banned")
+		return IPAlreadyBanned
 	}
+
 	return ExecuteUpdate("INSERT INTO BlockedIPs (ip) VALUES (?)", ip)
 }
 
@@ -301,8 +311,9 @@ func BanHWID(hwid string) error {
 	}
 
 	if result {
-		return fmt.Errorf("HWID is already banned")
+		return HWIDAlreadyBanned
 	}
+
 	return ExecuteUpdate("INSERT INTO BlockedHWIDs (hwid) VALUES (?)", hwid)
 }
 
