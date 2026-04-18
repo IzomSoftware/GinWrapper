@@ -9,15 +9,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// The HTTPS server struct. contains the gin.Engine which is the Router.
 type HttpsServer struct {
 	Router *gin.Engine
 }
 
+// The middleware, which gets called when every single connection begins.
 func middleware(context *gin.Context) {
 	logger.LogConnection(context)
 
 	connectionRequest := context.FullPath()
 
+	// We can't just provide every single protection without any
+	// Storage configured.
 	if configuration.IsStorageConfigured() {
 		for _, req := range Responses {
 			for _, address := range req.Addresses {
@@ -31,6 +35,16 @@ func middleware(context *gin.Context) {
 	context.Next()
 }
 
+// Registers every single path
+func (H *HttpsServer) RegisterPaths() {
+	for _, req := range Responses {
+		for _, address := range req.Addresses {
+			H.Router.Handle(req.Type, address, req.Handler)
+		}
+	}
+}
+
+// Listens & serves the HTTP/HTTPS server
 func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 	httpConfig := configuration.ConfigHolder.HTTPServer
 
@@ -45,26 +59,34 @@ func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 	H.Router.LoadHTMLGlob(templatesDir)
 	H.Router.Static(assetsDir, "."+assetsDir)
 
-	// Register No Route
+	// Register the 404 screen
 	H.Router.NoRoute(NoRoute)
 
+	isAnyUserPassAPIUsed := false
 	isAnyJWTAPIUsed := false
 
-	// Registering the Paths and responses
 	for name, req := range Responses {
 		for _, address := range req.Addresses {
 			if req.Protections.JWT {
+				isAnyUserPassAPIUsed = true
 				isAnyJWTAPIUsed = true
 			}
 			logger.Logger.Info(fmt.Sprintf("Registering Route -> %s - %s <-", name, address))
-			H.Router.Handle(req.Type, address, req.Handler)
 		}
 	}
 
-	// Register additional JWT Apis
+	// Register additional UserPass APIs
+	if isAnyUserPassAPIUsed || configuration.ConfigHolder.Protections.UserPassAPI {
+		ActivateUserPassAPI()
+	}
+
+	// Register additional JWT APIs
 	if isAnyJWTAPIUsed {
 		ActivateJWTAPI()
 	}
+
+	// Finalize the path registeration (including APIs we provide)
+	H.RegisterPaths()
 
 	addr := fmt.Sprintf("%s:%d", configuration.ConfigHolder.HTTPServer.Address, configuration.ConfigHolder.HTTPServer.Port)
 

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/utils/hash_util"
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 var dbPool *sql.DB
@@ -135,7 +135,7 @@ func SetupTables() error {
 		CREATE TABLE IF NOT EXISTS Users (
 			id UUID PRIMARY KEY,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
+            hash TEXT NOT NULL,
             jwt_version INTEGER NOT NULL DEFAULT 0,
 			banned INTEGER NOT NULL CHECK (banned IN (0, 1))
 		)`)
@@ -151,13 +151,13 @@ func SetupTables() error {
 		return err
 	}
 
-	_, err = dbPool.Exec(`
-		CREATE TABLE IF NOT EXISTS BlockedHWIDs (
-			hwid TEXT PRIMARY KEY
-		)`)
-	if err != nil {
-		return err
-	}
+	// _, err = dbPool.Exec(`
+	// 	CREATE TABLE IF NOT EXISTS BlockedHWIDs (
+	// 		hwid TEXT PRIMARY KEY
+	// 	)`)
+	// if err != nil {
+	// 	return err
+	// }
 
 	_, err = dbPool.Exec(`
 		CREATE TABLE IF NOT EXISTS RefreshJWTs (
@@ -173,15 +173,6 @@ func SetupTables() error {
 	}
 
 	return nil
-}
-
-func HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-
-	return string(hash), nil
 }
 
 func CheckUsernameExists(username string) (bool, error) {
@@ -270,12 +261,12 @@ func CreateUser(username, password string) error {
 		return UserAlreadyExists
 	}
 
-	hash, err := HashPassword(password)
+	hash, err := hash_util.HashPassword(password)
 	if err != nil {
 		return err
 	}
 
-	return ExecuteUpdate("INSERT INTO Users (id, username, password, jwt_version, banned) VALUES (?, ?, ?, 0, 0)", uuid, username, hash)
+	return ExecuteUpdate("INSERT INTO Users (id, username, hash, jwt_version, banned) VALUES (?, ?, ?, 0, 0)", uuid, username, hash)
 }
 
 func BanUser(uuid string) error {
@@ -304,18 +295,18 @@ func BanIP(ip string) error {
 	return ExecuteUpdate("INSERT INTO BlockedIPs (ip) VALUES (?)", ip)
 }
 
-func BanHWID(hwid string) error {
-	result, err := CheckIsBannedHWID(hwid)
-	if err != nil {
-		return err
-	}
+// func BanHWID(hwid string) error {
+// 	result, err := CheckIsBannedHWID(hwid)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if result {
-		return HWIDAlreadyBanned
-	}
+// 	if result {
+// 		return HWIDAlreadyBanned
+// 	}
 
-	return ExecuteUpdate("INSERT INTO BlockedHWIDs (hwid) VALUES (?)", hwid)
-}
+// 	return ExecuteUpdate("INSERT INTO BlockedHWIDs (hwid) VALUES (?)", hwid)
+// }
 
 func UnbanUser(uuid string) error {
 	return ExecuteUpdate("UPDATE Users SET banned = 0 WHERE id = ?", uuid)
@@ -325,6 +316,6 @@ func UnbanIP(ip string) error {
 	return ExecuteUpdate("DELETE FROM BlockedIPs WHERE ip = ?", ip)
 }
 
-func UnbanHWID(hwid string) error {
-	return ExecuteUpdate("DELETE FROM BlockedHWIDs WHERE hwid = ?", hwid)
-}
+// func UnbanHWID(hwid string) error {
+// 	return ExecuteUpdate("DELETE FROM BlockedHWIDs WHERE hwid = ?", hwid)
+// }

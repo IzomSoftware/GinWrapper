@@ -7,9 +7,9 @@ import (
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
 	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/redis"
-	"github.com/IzomSoftware/GinWrapper/sql"
-	utils "github.com/IzomSoftware/GinWrapper/utils"
+	"github.com/IzomSoftware/GinWrapper/storage/redis"
+	"github.com/IzomSoftware/GinWrapper/storage/sql"
+	"github.com/IzomSoftware/GinWrapper/utils/jwt_util"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -21,7 +21,7 @@ var (
 func main() {
 	logger.SetupLogger("Test Website", logrus.DebugLevel)
 
-	secret, _ := utils.GenerateJWTRandomSecret(32)
+	secret, _ := jwt_util.GenerateJWTRandomSecret(32)
 
 	// Adjust as needed
 	configuration.DefaultConfig.Protections.JWTProtection.JWTSecret = secret
@@ -36,13 +36,14 @@ func main() {
 	redis.Init()
 
 	// add responses
-	httpscore.Responses["home"] = httpscore.Response{
+	httpscore.Responses["home"] = &httpscore.Response{
 		Handler: func(c *gin.Context) {
 			c.String(http.StatusOK, "")
 		},
 		Type:        "GET",
-		Addresses:   []string{"/home", "/home/", "/kos/nago/kooni"},
-		Protections: httpscore.Protections{},
+		Addresses:   []string{"/home", "/home/"},
+		Protections: httpscore.Protections{
+		},
 	}
 
 	// first argument is templateDir and second one is assetsDir

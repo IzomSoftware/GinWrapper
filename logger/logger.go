@@ -16,7 +16,7 @@ var logs = list.New()
 
 func Log() {
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(1*time.Second)
 
 		if logs.Len() < 1 {
 			continue
@@ -24,7 +24,9 @@ func Log() {
 
 		front := logs.Front()
 
-		Logger.Info(fmt.Sprintf("%s", front.Value))
+		val, _ := front.Value.(func())
+
+		val()
 
 		logs.Remove(front)
 	}
@@ -35,7 +37,19 @@ func LogInfo(s string) {
 		return
 	}
 
-	logs.PushBack(fmt.Sprintf("[HTTPS] %s", s))
+	logs.PushBack(func() {
+		Logger.Info(fmt.Sprintf("[HTTPS] %s", s))
+	})
+}
+
+func LogError(s string) {
+	if !configuration.ConfigHolder.Debug {
+		return
+	}
+
+	logs.PushBack(func() {
+		Logger.Error(fmt.Sprintf("[HTTPS] %s", s))
+	})
 }
 
 func LogConnection(connection *gin.Context) {
@@ -59,5 +73,5 @@ type customFormat struct {
 }
 
 func (F *customFormat) Format(ent *logrus.Entry) ([]byte, error) {
-	return []byte(fmt.Sprintf("[%s] [%s] %s\n", F.AppName, ent.Level.String(), ent.Message)), nil
+	return fmt.Appendf(nil, "[%s] [%s] %s\n", F.AppName, ent.Level.String(), ent.Message), nil
 }

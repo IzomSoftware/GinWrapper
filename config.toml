@@ -49,9 +49,16 @@ debug = true
     skip_tls_verification = true
 
 [protections]
-  provide_basic_protections = true
-  aggressive_basic_protections = true
+  user_pass_api = true
   api_user_agent = "Test Client 1.0/b (Software)"
+  [protections.basic_protections]
+    provide = true
+    aggressive = true
   [protections.jwt_protection]
-    jwt_secret = "m32v8iPFSWDL8QRnVHFPzK7Q6RU-6beUP-FsqmVkvSQ="
+    jwt_secret = "ggBSU8RsEUz2KiZ6_JLEiIGDFxg839XMtE501K9f5Nw="
     jwt_expiration = 60
+  [protections.ordering_protection]
+    enabled = true
+    [protections.ordering_protection.orders]
+      "/auth" = ["/", "/home"]
+      "/dashboard" = ["/auth"]

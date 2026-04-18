@@ -7,11 +7,18 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
+/*
+ * the TLS configuration struct
+ */
 type HttpsTlsConfiguration struct {
 	Enable   bool   `toml:"enable"`
 	CertFile string `toml:"cert_file"`
 	KeyFile  string `toml:"key_file"`
 }
+
+/*
+ * the HTTP configuration struct
+ */
 type HTTPServer struct {
 	Enabled          bool                  `toml:"enabled"`
 	Address          string                `toml:"address"`
@@ -21,15 +28,24 @@ type HTTPServer struct {
 	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
 }
 
+/*
+ * the SQLite configuration struct
+ */
 type SQLiteConfiguration struct {
 	Enabled          bool   `toml:"enabled"`
 	DatabaseLocation string `toml:"database_location"`
 }
 
+/*
+ * the EmbeddedRedis configuration struct
+ */
 type EmbeddedRedisConfiguration struct {
 	Enabled bool `toml:"enabled"`
 }
 
+/*
+ * the MYSQL configuration struct
+ */
 type MySQLConfiguration struct {
 	Enabled             bool   `toml:"enabled"`
 	Hostname            string `toml:"hostname"`
@@ -47,6 +63,9 @@ type MySQLConfiguration struct {
 	ParseTime              bool   `toml:"parse_time"`
 }
 
+/*
+ * the Redis configuration struct
+ */
 type RedisConfiguration struct {
 	Enabled             bool   `toml:"enabled"`
 	Hostname            string `toml:"hostname"`
@@ -65,6 +84,9 @@ type RedisConfiguration struct {
 	SkipTLSVerification bool   `toml:"skip_tls_verification"`
 }
 
+/*
+ * the whole storage configuration struct
+ */
 type DatabaseConfiguration struct {
 	SQLiteConfiguration        SQLiteConfiguration        `toml:"sqlite_configuration"`
 	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
@@ -72,18 +94,44 @@ type DatabaseConfiguration struct {
 	RedisConfiguration         RedisConfiguration         `toml:"redis_configuration"`
 }
 
+/*
+ * the JWT related configurations struct
+ */
 type JWTProtection struct {
 	JWTSecret     string `toml:"jwt_secret"`
 	JWTExpiration int    `toml:"jwt_expiration"`
 }
 
-type Protections struct {
-	ProvideBasicProtections    bool          `toml:"provide_basic_protections"`
-	AggressiveBasicProtections bool          `toml:"aggressive_basic_protections"`
-	JWTProtection              JWTProtection `toml:"jwt_protection"`
-	APIUserAgent               string        `toml:"api_user_agent"`
+/*
+ * the BasicProtections configuration struct
+ */
+type BasicProtections struct {
+	Provide    bool `toml:"provide"`
+	Aggressive bool `toml:"aggressive"`
 }
 
+/*
+ * the OrderingProtection configuration struct
+ */
+type OrderingProtection struct {
+	Enabled bool                `toml:"enabled"`
+	Orders  map[string][]string `toml:"orders"`
+}
+
+/*
+ * the whole protections configuration struct
+ */
+type Protections struct {
+	UserPassAPI        bool               `toml:"user_pass_api"`
+	APIUserAgent       string             `toml:"api_user_agent"`
+	BasicProtections   BasicProtections   `toml:"basic_protections"`
+	JWTProtection      JWTProtection      `toml:"jwt_protection"`
+	OrderingProtection OrderingProtection `toml:"ordering_protection"`
+}
+
+/*
+ * the whole configuration itself
+ */
 type Configuration struct {
 	Debug                 bool                  `toml:"debug"`
 	HTTPServer            HTTPServer            `toml:"http_server"`
@@ -91,9 +139,12 @@ type Configuration struct {
 	Protections           Protections           `toml:"protections"`
 }
 
-var ConfigHolder Configuration
+// The configuration holder (inside ram of course)
+var ConfigHolder *Configuration
+
+// The default configuration we provide to help developers
 var DefaultConfig = Configuration{
-	Debug: false,
+	Debug: true,
 	HTTPServer: HTTPServer{
 		Enabled:      true,
 		Address:      "0.0.0.0",
@@ -147,26 +198,41 @@ var DefaultConfig = Configuration{
 		},
 	},
 	Protections: Protections{
-		ProvideBasicProtections:    true,
-		AggressiveBasicProtections: true,
-		APIUserAgent:               "Test Client 1.0/b (Software)",
+		UserPassAPI: true,
+		BasicProtections: BasicProtections{
+			Provide:    true,
+			Aggressive: true,
+		},
+		APIUserAgent: "Test Client 1.0/b (Software)",
+		OrderingProtection: OrderingProtection{
+			Enabled: true,
+			Orders: map[string][]string{
+				"/auth":      {"/", "/home"},
+				"/dashboard": {"/auth"},
+			},
+		},
 		JWTProtection: JWTProtection{
 			JWTSecret:     "",
 			JWTExpiration: 60,
 		},
 	},
 }
+
+// Errors
 var cannotInitializeMultipleStorageSourcesAtOnce = fmt.Errorf("Can't enable multiple Redis/SQL based databases at once")
 
+// Returns true if storage is configured correctly
 func IsStorageConfigured() bool {
-	isRedisEnabled := ConfigHolder.DatabaseConfiguration.RedisConfiguration.Enabled || ConfigHolder.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled
-	isSqlEnabled := ConfigHolder.DatabaseConfiguration.MySQLConfiguration.Enabled || ConfigHolder.DatabaseConfiguration.SQLiteConfiguration.Enabled
+	databaseConfig := ConfigHolder.DatabaseConfiguration
+	isRedisEnabled := databaseConfig.RedisConfiguration.Enabled || databaseConfig.EmbeddedRedisConfiguration.Enabled
+	isSqlEnabled := databaseConfig.MySQLConfiguration.Enabled || databaseConfig.SQLiteConfiguration.Enabled
 
 	return isRedisEnabled && isSqlEnabled
-
 }
+
+// Setups the config based on the Default config (which developers should configure)
 func SetupConfig(fileName string) error {
-	ConfigHolder = DefaultConfig
+	ConfigHolder = &DefaultConfig
 
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		file, err := os.Create(fileName)
@@ -188,10 +254,11 @@ func SetupConfig(fileName string) error {
 		return err
 	}
 
-	if (ConfigHolder.DatabaseConfiguration.MySQLConfiguration.Enabled &&
-		ConfigHolder.DatabaseConfiguration.SQLiteConfiguration.Enabled) ||
-		(ConfigHolder.DatabaseConfiguration.RedisConfiguration.Enabled &&
-			ConfigHolder.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled) {
+	databaseConfig := ConfigHolder.DatabaseConfiguration
+	if (databaseConfig.MySQLConfiguration.Enabled &&
+		databaseConfig.SQLiteConfiguration.Enabled) ||
+		(databaseConfig.RedisConfiguration.Enabled &&
+			databaseConfig.EmbeddedRedisConfiguration.Enabled) {
 		return cannotInitializeMultipleStorageSourcesAtOnce
 	}
 
