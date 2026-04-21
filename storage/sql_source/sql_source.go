@@ -1,4 +1,4 @@
-package sql
+package sql_source
 
 import (
 	"database/sql"
@@ -12,14 +12,15 @@ import (
 	"github.com/google/uuid"
 )
 
-var dbPool *sql.DB
-
-var UnexpectedTypeError = fmt.Errorf("Unexpected type for value")
-var SQLNotConfigured = fmt.Errorf("No SQL implementation configured")
-var HWIDAlreadyBanned = fmt.Errorf("HWID is already banned")
-var IPAlreadyBanned = fmt.Errorf("IP is already banned")
-var UserAlreadyBanned = fmt.Errorf("User is already banned")
-var UserAlreadyExists = fmt.Errorf("User already exists")
+var (
+	dbPool              *sql.DB
+	UnexpectedTypeError = fmt.Errorf("Unexpected type for value")
+	SQLNotConfigured    = fmt.Errorf("No SQL implementation configured")
+	HWIDAlreadyBanned   = fmt.Errorf("HWID is already banned")
+	IPAlreadyBanned     = fmt.Errorf("IP is already banned")
+	UserAlreadyBanned   = fmt.Errorf("User is already banned")
+	UserAlreadyExists   = fmt.Errorf("User already exists")
+)
 
 /*
  * SQLite
@@ -177,12 +178,12 @@ func SetupTables() error {
 
 func CheckUsernameExists(username string) (bool, error) {
 	result, err := GetData("SELECT COUNT(*) FROM Users WHERE username = ?", username)
-	if err != nil {
-		return false, err
-	}
-
 	val, ok := result.(int64)
+
 	if !ok {
+		if err != nil {
+			return false, err
+		}
 		return false, UnexpectedTypeError
 	}
 
@@ -191,12 +192,12 @@ func CheckUsernameExists(username string) (bool, error) {
 
 func CheckUserExists(uuid string) (bool, error) {
 	result, err := GetData("SELECT COUNT(*) FROM Users WHERE id = ?", uuid)
-	if err != nil {
-		return false, err
-	}
-
 	val, ok := result.(int64)
+
 	if !ok {
+		if err != nil {
+			return false, err
+		}
 		return false, UnexpectedTypeError
 	}
 
@@ -205,12 +206,12 @@ func CheckUserExists(uuid string) (bool, error) {
 
 func CheckIsUserBanned(uuid string) (bool, error) {
 	result, err := GetData("SELECT COUNT(*) FROM Users WHERE id = ?", uuid)
-	if err != nil {
-		return false, err
-	}
-
 	val, ok := result.(int64)
+
 	if !ok {
+		if err != nil {
+			return false, err
+		}
 		return false, UnexpectedTypeError
 	}
 
@@ -219,12 +220,12 @@ func CheckIsUserBanned(uuid string) (bool, error) {
 
 func CheckIsBannedHWID(hwid string) (bool, error) {
 	result, err := GetData("SELECT COUNT(*) FROM BlockedHWIDs WHERE hwid = ?", hwid)
-	if err != nil {
-		return false, err
-	}
-
 	val, ok := result.(int64)
+
 	if !ok {
+		if err != nil {
+			return false, err
+		}
 		return false, UnexpectedTypeError
 	}
 
@@ -233,12 +234,12 @@ func CheckIsBannedHWID(hwid string) (bool, error) {
 
 func CheckIsBannedIP(ip string) (bool, error) {
 	result, err := GetData("SELECT COUNT(*) FROM BlockedIPs WHERE ip = ?", ip)
-	if err != nil {
-		return false, err
-	}
-
 	val, ok := result.(int64)
+
 	if !ok {
+		if err != nil {
+			return false, err
+		}
 		return false, UnexpectedTypeError
 	}
 

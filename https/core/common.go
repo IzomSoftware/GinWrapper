@@ -5,8 +5,12 @@ import (
 	"net/http"
 
 	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/storage/sql"
+	"github.com/IzomSoftware/GinWrapper/storage/sql_source"
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	RedisSourceError = fmt.Errorf("Unable to access Redis source value")
 )
 
 /*
@@ -33,7 +37,7 @@ func AbortSuspiciousConnection(ip string, c *gin.Context) {
 func BanConnection(ip string, c *gin.Context) {
 	AbortSuspiciousConnection(ip, c)
 
-	if err := sql.BanIP(ip); err != nil {
+	if err := sql_source.BanIP(ip); err != nil {
 		logger.LogError(fmt.Sprintf("Connection %s is already banned", ip))
 	}
 

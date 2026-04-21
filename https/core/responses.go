@@ -8,7 +8,8 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/storage/sql"
+	"github.com/IzomSoftware/GinWrapper/storage/redis_source"
+	"github.com/IzomSoftware/GinWrapper/storage/sql_source"
 	"github.com/IzomSoftware/GinWrapper/utils/hash_util"
 	"github.com/IzomSoftware/GinWrapper/utils/jwt_util"
 	"github.com/gin-gonic/gin"
@@ -63,7 +64,8 @@ var (
 	/*
 	 * We provide this variable for developers to set & setup custom 404 screens (or do whatever they want)
 	 */
-	NoRouteRoute = func(c *gin.Context) { c.String(http.StatusNotFound, "404 Not Found") }
+	NoRouteRoute        = func(c *gin.Context) { c.String(http.StatusNotFound, "404 Not Found") }
+	UnexpectedTypeError = fmt.Errorf("Unexpected type for value")
 )
 
 /*
@@ -75,10 +77,10 @@ func ActivateUserPassAPI() {
 		Handler: func(c *gin.Context) {
 			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
 
-			err := sql.CreateUser(username, password)
+			err := sql_source.CreateUser(username, password)
 			// Possible internal server error
 			if err != nil {
-				if err == sql.UserAlreadyExists {
+				if err == sql_source.UserAlreadyExists {
 					c.String(http.StatusBadRequest, "User already exists")
 					AbortConnection(ip, c, http.StatusBadRequest)
 					return
@@ -104,11 +106,12 @@ func ActivateUserPassAPI() {
 	Responses["UserPassAPILogin"] = &Response{
 		Handler: func(c *gin.Context) {
 			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
-			
-			result, err := sql.GetData("SELECT hash FROM Users WHERE username = ?", username)
+
+			result, err := sql_source.GetData("SELECT hash FROM Users WHERE username = ?", username)
 			if err != nil {
 				logger.LogError(fmt.Sprintf("UserPassAPI login error: %s\n", err))
 				AbortConnection(ip, c, http.StatusInternalServerError)
+				return
 			}
 
 			val := result.(string)
@@ -234,15 +237,50 @@ func (R *Response) OnProtected(c *gin.Context) {
 		return
 	}
 
-	_, protections, header := c.ClientIP(), response.Protections, c.Request.Header
+	ip, protections, header := c.ClientIP(), response.Protections, c.Request.Header
 
 	// User agent check
 	if userAgent, apiUserAgent := header.Get("User-Agent"),
 		configuration.ConfigHolder.Protections.APIUserAgent;
 
-		// The actual check, if user agent is valid, perform no further action
-		protections.UserAgent && userAgent != apiUserAgent {
+	// The actual check, if user agent is valid, perform no further action
+	protections.UserAgent && userAgent != apiUserAgent {
 
 		response.OnProtectionFailure(c)
+	}
+
+	if protections.RateLimit {
+		if err := redis_source.IncrementRateLimit(c, ip); err != nil {
+			logger.LogError(fmt.Sprintf("%s", err))
+			fmt.Println("s")
+			AbortConnection(ip, c, http.StatusInternalServerError)
+			return
+		}
+
+		rate, err := redis_source.GetRateLimit(c, ip)
+		if err != nil {
+			logger.LogError(fmt.Sprintf("%s", err))
+			AbortConnection(ip, c, http.StatusInternalServerError)
+			return
+		}
+
+		lastRate, err := redis_source.GetLastRateLimit(c, ip)
+		if err != nil {
+			logger.LogError(fmt.Sprintf("%s", err))
+			AbortConnection(ip, c, http.StatusInternalServerError)
+			return
+		}
+
+		if time.Now().UnixMilli()-lastRate > 1000 {
+			if rate > 30 {
+				response.OnProtectionFailure(c)
+			}
+		} else {
+			if err = redis_source.UpdateHashValue(c, ip, "Rate", 0); err != nil {
+				logger.LogError(fmt.Sprintf("%s", err))
+				AbortConnection(ip, c, http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 }
