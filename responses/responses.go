@@ -1,4 +1,4 @@
-package https_core
+package responses
 
 import (
 	"fmt"
@@ -15,6 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type RateLimitProtection struct {
+	Enabled bool
+	Rate    int64
+	Time    int64
+}
 
 /*
  * the Protections struct, containing protections we provide on requests
@@ -38,7 +44,7 @@ type Protections struct {
 	 * Rate limit protection. protects the server from spam
 	 * Attacks & API abuses
 	 */
-	RateLimit bool
+	RateLimit RateLimitProtection
 	/*
 	 * Wether to ban suspicious connections or not. this is
 	 * Not a great idea if you enable protections with false-positives, obviously
@@ -60,125 +66,33 @@ var (
 	/*
 	 * Responses map.
 	 */
-	Responses = map[string]*Response{}
-	/*
-	 * We provide this variable for developers to set & setup custom 404 screens (or do whatever they want)
-	 */
-	NoRouteRoute        = func(c *gin.Context) { c.String(http.StatusNotFound, "404 Not Found") }
+	Responses    = map[string]*Response{}
+	NoRouteRoute = func(c *gin.Context) {
+		/*
+		 * We provide this variable for developers to set & setup custom screens (or do whatever they want)
+		 */
+		c.String(http.StatusNotFound, "404 Not Found")
+	}
+	InternalServerErrorRouteRoute = func(c *gin.Context) {
+		/*
+		 * We provide this variable for developers to set & setup custom screens (or do whatever they want)
+		 */
+	}
 	UnexpectedTypeError = fmt.Errorf("Unexpected type for value")
 )
 
 /*
- * Adds all requests related to UserPassAPI so that we provide this API.
+ * This function executes before developer's 500 screen appear
+ * We do this to keep things modular but working
  */
-func ActivateUserPassAPI() {
-	// The Register API. Gets username & password & hashes the password & registers the user
-	Responses["UserPassAPIRegister"] = &Response{
-		Handler: func(c *gin.Context) {
-			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
+func InternalServerErrorRoute(c *gin.Context, err error) {
+	ip := c.ClientIP()
 
-			err := sql_source.CreateUser(username, password)
-			// Possible internal server error
-			if err != nil {
-				if err == sql_source.UserAlreadyExists {
-					c.String(http.StatusBadRequest, "User already exists")
-					AbortConnection(ip, c, http.StatusBadRequest)
-					return
-				}
-				logger.LogError(fmt.Sprintf("UserPassAPI registration error: %s\n", err))
-				AbortConnection(ip, c, http.StatusInternalServerError)
-				return
-			}
+	InternalServerErrorRouteRoute(c)
 
-			c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?username=%s&password=%s", "/api/auth/login", username, password))
-		},
-		Type:      "GET",
-		Addresses: []string{"/api/auth/register"},
-		Protections: Protections{
-			BasicProtections: true,
-			RateLimit:        true,
-		},
-	}
-	// The Login API. checks if password is valid
-	// Also is the generation API. generates the token after authorization is complete.
-	// Requires no further actions from developers because we already provide
-	// The UserPass boolean so we protect this request.
-	Responses["UserPassAPILogin"] = &Response{
-		Handler: func(c *gin.Context) {
-			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
+	logger.LogError(fmt.Sprintf("%s", err))
 
-			result, err := sql_source.GetData("SELECT hash FROM Users WHERE username = ?", username)
-			if err != nil {
-				logger.LogError(fmt.Sprintf("UserPassAPI login error: %s\n", err))
-				AbortConnection(ip, c, http.StatusInternalServerError)
-				return
-			}
-
-			val := result.(string)
-
-			// Checks the password (with all those bcrypt salting shit)
-			err = hash_util.IsPasswordValid(val, password)
-			// Error is not related to password validation so it means
-			// we're dealing with something else.
-			if err != nil {
-				if err == bcrypt.ErrMismatchedHashAndPassword {
-					c.String(http.StatusBadRequest, "Wrong Password")
-					AbortConnection(ip, c, http.StatusBadRequest)
-					return
-				}
-				logger.LogError(fmt.Sprintf("UserPassAPI login error: %s\n", err))
-				AbortConnection(ip, c, http.StatusInternalServerError)
-				return
-			}
-
-			token, err := jwt_util.GenerateJWT(username, "Bearer", time.Second*1)
-			if err != nil {
-				logger.LogError(fmt.Sprintf("UserPassAPI token generation error: %s\n", err))
-				AbortConnection(ip, c, http.StatusInternalServerError)
-				return
-			}
-
-			c.String(http.StatusOK, "%s", token)
-		},
-		Type:      "GET",
-		Addresses: []string{"/api/auth/login"},
-		Protections: Protections{
-			BasicProtections: true,
-			RateLimit:        true,
-		},
-	}
-}
-
-/*
- * Adds all requests related to JWTAPI so that we provide this API.
- */
-func ActivateJWTAPI() {
-	// The validation API. validates the token given, so we'll authorize.
-	Responses["JWTAPIValidate"] = &Response{
-		Handler: func(c *gin.Context) {
-			// ip, token := c.ClientIP(), c.Query("token")
-
-			// valid, err := jwt_util.ValidateJWT(token)
-			// if err != nil {
-			// 	AbortConnection(ip, c, http.StatusInternalServerError)
-			// }
-
-			// valid.
-
-			// if valid {
-			// 	c.String(http.StatusOK, "true")
-			// } else {
-			// 	c.String(http.StatusForbidden, "false")
-			// }
-			c.String(http.StatusOK, "")
-		},
-		Type:      "GET",
-		Addresses: []string{"/api/auth/validate_token"},
-		Protections: Protections{
-			BasicProtections: true,
-			RateLimit:        true,
-		},
-	}
+	AbortConnection(ip, c, http.StatusInternalServerError)
 }
 
 /*
@@ -215,6 +129,129 @@ func NoRoute(c *gin.Context) {
 	NoRouteRoute(c)
 }
 
+/*
+ * Adds all requests related to UserPassAPI so that we provide this API.
+ */
+func ActivateUserPassAPI() {
+	// The Register API. Gets username & password & hashes the password & registers the user
+	Responses["UserPassAPIRegister"] = &Response{
+		Handler: func(c *gin.Context) {
+			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
+
+			err := sql_source.CreateUser(username, password)
+			// Possible internal server error
+			if err != nil {
+				if err == sql_source.UserAlreadyExists {
+					c.String(http.StatusBadRequest, "User already exists")
+					AbortConnection(ip, c, http.StatusBadRequest)
+					return
+				}
+				logger.LogError(fmt.Sprintf("UserPassAPI registration error: %s\n", err))
+				AbortConnection(ip, c, http.StatusInternalServerError)
+				return
+			}
+
+			c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?username=%s&password=%s", "/api/auth/login", username, password))
+		},
+		Type:      "GET",
+		Addresses: []string{"/api/auth/register"},
+		Protections: Protections{
+			BasicProtections: true,
+			RateLimit: RateLimitProtection{
+				Enabled: true,
+				Rate:    5,
+				Time:    3600,
+			},
+		},
+	}
+	// The Login API. checks if password is valid
+	// Also is the generation API. generates the token after authorization is complete.
+	// Requires no further actions from developers because we already provide
+	// The UserPass boolean so we protect this request.
+	Responses["UserPassAPILogin"] = &Response{
+		Handler: func(c *gin.Context) {
+			ip, username, password := c.ClientIP(), c.Query("username"), c.Query("password")
+
+			result, err := sql_source.GetData("SELECT hash FROM Users WHERE username = ?", username)
+			if err != nil {
+				InternalServerErrorRoute(c, err)
+				return
+			}
+
+			val := result.(string)
+
+			// Checks the password (with all those bcrypt salting shit)
+			err = hash_util.IsPasswordValid(val, password)
+			// Error is not related to password validation so it means
+			// we're dealing with something else.
+			if err != nil {
+				if err == bcrypt.ErrMismatchedHashAndPassword {
+					c.String(http.StatusBadRequest, "Wrong Password")
+					AbortConnection(ip, c, http.StatusBadRequest)
+					return
+				}
+
+				InternalServerErrorRoute(c, err)
+				return
+			}
+
+			token, err := jwt_util.GenerateJWT(username, "Bearer", time.Second*1)
+			if err != nil {
+				InternalServerErrorRoute(c, err)
+				return
+			}
+
+			c.String(http.StatusOK, "%s", token)
+		},
+		Type:      "GET",
+		Addresses: []string{"/api/auth/login"},
+		Protections: Protections{
+			BasicProtections: true,
+			RateLimit: RateLimitProtection{
+				Enabled: true,
+				Rate:    5,
+				Time:    60,
+			},
+		},
+	}
+}
+
+/*
+ * Adds all requests related to JWTAPI so that we provide this API.
+ */
+func ActivateJWTAPI() {
+	// The validation API. validates the token given, so we'll authorize.
+	Responses["JWTAPIValidate"] = &Response{
+		Handler: func(c *gin.Context) {
+			// ip, token := c.ClientIP(), c.Query("token")
+
+			// valid, err := jwt_util.ValidateJWT(token)
+			// if err != nil {
+			// 	AbortConnection(ip, c, http.StatusInternalServerError)
+			// }
+
+			// valid.
+
+			// if valid {
+			// 	c.String(http.StatusOK, "true")
+			// } else {
+			// 	c.String(http.StatusForbidden, "false")
+			// }
+			c.String(http.StatusOK, "")
+		},
+		Type:      "GET",
+		Addresses: []string{"/api/auth/validate_token"},
+		Protections: Protections{
+			BasicProtections: true,
+			RateLimit: RateLimitProtection{
+				Enabled: true,
+				Rate:    30,
+				Time:    60,
+			},
+		},
+	}
+}
+
 func (R *Response) OnProtectionFailure(c *gin.Context) {
 	ip, protections := c.ClientIP(), R.Protections
 
@@ -249,38 +286,45 @@ func (R *Response) OnProtected(c *gin.Context) {
 		response.OnProtectionFailure(c)
 	}
 
-	if protections.RateLimit {
-		if err := redis_source.IncrementRateLimit(c, ip); err != nil {
-			logger.LogError(fmt.Sprintf("%s", err))
-			fmt.Println("s")
-			AbortConnection(ip, c, http.StatusInternalServerError)
+	if protections.RateLimit.Enabled {
+		lastRate, err := redis_source.GetLastRateLimit(c, ip)
+		if err != nil {
+			InternalServerErrorRoute(c, err)
 			return
+		}
+
+		if time.Now().UnixMilli()-lastRate <= protections.RateLimit.Time*1000 {
+			if err := redis_source.IncrementRateLimit(c, ip); err != nil {
+				InternalServerErrorRoute(c, err)
+				return
+			}
+		} else {
+			if err = redis_source.UpdateHashValue(c, ip, "Rate", 1); err != nil {
+				InternalServerErrorRoute(c, err)
+				return
+			}
+
+			if err = redis_source.UpdateHashValue(c, ip, "LastRate", time.Now().UnixMilli()); err != nil {
+				InternalServerErrorRoute(c, err)
+				return
+			}
 		}
 
 		rate, err := redis_source.GetRateLimit(c, ip)
 		if err != nil {
-			logger.LogError(fmt.Sprintf("%s", err))
-			AbortConnection(ip, c, http.StatusInternalServerError)
+			InternalServerErrorRoute(c, err)
 			return
 		}
 
-		lastRate, err := redis_source.GetLastRateLimit(c, ip)
-		if err != nil {
-			logger.LogError(fmt.Sprintf("%s", err))
-			AbortConnection(ip, c, http.StatusInternalServerError)
-			return
-		}
-
-		if time.Now().UnixMilli()-lastRate > 1000 {
-			if rate > 30 {
-				response.OnProtectionFailure(c)
-			}
-		} else {
-			if err = redis_source.UpdateHashValue(c, ip, "Rate", 0); err != nil {
-				logger.LogError(fmt.Sprintf("%s", err))
-				AbortConnection(ip, c, http.StatusInternalServerError)
-				return
-			}
+		if rate > protections.RateLimit.Rate {
+			response.OnProtectionFailure(c)
 		}
 	}
+}
+
+/*
+ * Returns true if any protection is enabled
+ */
+func (R *Response) IsAnyProtectionEnabled() bool {
+	return R.Protections.BasicProtections || R.Protections.UserAgent || R.Protections.JWT || R.Protections.RateLimit.Enabled
 }

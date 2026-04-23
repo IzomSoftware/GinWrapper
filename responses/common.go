@@ -1,4 +1,4 @@
-package https_core
+package responses
 
 import (
 	"fmt"
@@ -42,11 +42,4 @@ func BanConnection(ip string, c *gin.Context) {
 	}
 
 	logger.LogInfo(fmt.Sprintf("Connection %s banned", ip))
-}
-
-/*
- * Returns true if any protection is enabled
- */
-func (R *Response) IsAnyProtectionEnabled() bool {
-	return R.Protections.BasicProtections || R.Protections.UserAgent || R.Protections.JWT || R.Protections.RateLimit
 }

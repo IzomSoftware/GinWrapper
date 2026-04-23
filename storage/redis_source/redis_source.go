@@ -119,7 +119,7 @@ func GetValue(c context.Context, name string) (any, error) {
 	return redisCl.Get(c, name).Result()
 }
 
-func HSetValue(c context.Context, name string, arg any) error {
+func HSetValue(c context.Context, name string, arg map[string]interface{}) error {
 	if c == nil {
 		c = redisCtx
 	}
@@ -157,7 +157,10 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 				Rate:     1,
 				LastRate: time.Now().UnixMilli(),
 			}
-			err = HSetValue(c, ip, user)
+			err = HSetValue(c, ip, map[string]any{
+				"Rate": user.Rate,
+				"LastRate": user.LastRate,
+			})
 			rate = user.Rate
 		}
 
@@ -168,7 +171,7 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 
 	rateStr, ok := rate.(string)
 	val, err := strconv.ParseInt(rateStr, 10, 64)
-
+	
 	if !ok {
 		if err != nil {
 			logger.LogError(fmt.Sprintf("%s", err))
@@ -189,7 +192,10 @@ func GetLastRateLimit(c *gin.Context, ip string) (int64, error) {
 				Rate:     1,
 				LastRate: time.Now().UnixMilli(),
 			}
-			err = HSetValue(c, ip, user)
+			err = HSetValue(c, ip, map[string]any{
+				"Rate": user.Rate,
+				"LastRate": user.LastRate,
+			})
 			lastRate = user.LastRate
 		}
 

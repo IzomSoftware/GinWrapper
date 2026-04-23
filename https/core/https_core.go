@@ -5,6 +5,7 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/responses"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +24,7 @@ func middleware(context *gin.Context) {
 	// We can't just provide every single protection without any
 	// Storage configured.
 	if configuration.IsStorageConfigured() {
-		for _, req := range Responses {
+		for _, req := range responses.Responses {
 			for _, address := range req.Addresses {
 				if connectionRequest == address {
 					req.OnProtected(context)
@@ -37,7 +38,7 @@ func middleware(context *gin.Context) {
 
 // Registers every single path
 func (H *HttpsServer) RegisterPaths() {
-	for _, req := range Responses {
+	for _, req := range responses.Responses {
 		for _, address := range req.Addresses {
 			H.Router.Handle(req.Type, address, req.Handler)
 		}
@@ -60,12 +61,12 @@ func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 	H.Router.Static(assetsDir, "."+assetsDir)
 
 	// Register the 404 screen
-	H.Router.NoRoute(NoRoute)
+	H.Router.NoRoute(responses.NoRoute)
 
 	isAnyUserPassAPIUsed := false
 	isAnyJWTAPIUsed := false
 
-	for name, req := range Responses {
+	for name, req := range responses.Responses {
 		for _, address := range req.Addresses {
 			if req.Protections.JWT {
 				isAnyUserPassAPIUsed = true
@@ -77,12 +78,12 @@ func (H *HttpsServer) ListenAndServe(templatesDir string, assetsDir string) {
 
 	// Register additional UserPass APIs
 	if isAnyUserPassAPIUsed || configuration.ConfigHolder.Protections.UserPassAPI {
-		ActivateUserPassAPI()
+		responses.ActivateUserPassAPI()
 	}
 
 	// Register additional JWT APIs
 	if isAnyJWTAPIUsed {
-		ActivateJWTAPI()
+		responses.ActivateJWTAPI()
 	}
 
 	// Finalize the path registeration (including APIs we provide)
