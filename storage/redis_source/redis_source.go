@@ -183,6 +183,7 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 	return val, nil
 }
 
+
 func GetLastRateLimit(c *gin.Context, ip string) (int64, error) {
 	lastRate, err := HGetValue(c, ip, "LastRate")
 
