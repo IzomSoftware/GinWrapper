@@ -37,13 +37,6 @@ type SQLiteConfiguration struct {
 }
 
 /*
- * the EmbeddedRedis configuration struct
- */
-type EmbeddedRedisConfiguration struct {
-	Enabled bool `toml:"enabled"`
-}
-
-/*
  * the MYSQL configuration struct
  */
 type MySQLConfiguration struct {
@@ -61,6 +54,18 @@ type MySQLConfiguration struct {
 	MaxIdleConnections     int    `toml:"max_idle_connections"`
 	ConnectionsMaxLifetime int    `toml:"connections_max_lifetime_seconds"`
 	ParseTime              bool   `toml:"parse_time"`
+}
+
+type SQLConfiguration struct {
+	SQLiteConfiguration SQLiteConfiguration `toml:"sqlite_configuration"`
+	MySQLConfiguration  MySQLConfiguration  `toml:"mysql_configuration"`
+}
+
+/*
+ * the EmbeddedRedis configuration struct
+ */
+type EmbeddedRedisConfiguration struct {
+	Enabled bool `toml:"enabled"`
 }
 
 /*
