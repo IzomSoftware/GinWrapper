@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/storage/sql_source"
+	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/storage/sql_source"
 	"github.com/gin-gonic/gin"
 )
 

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
-	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/storage/redis_source"
-	"github.com/IzomSoftware/GinWrapper/storage/sql_source"
-	"github.com/IzomSoftware/GinWrapper/utils/hash_util"
-	"github.com/IzomSoftware/GinWrapper/utils/jwt_util"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/storage/redis_source"
+	"github.com/IzomSoftware/GinWrapper/internal/storage/sql_source"
+	"github.com/IzomSoftware/GinWrapper/internal/utils/hash_util"
+	"github.com/IzomSoftware/GinWrapper/internal/utils/jwt_util"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -3,9 +3,9 @@ package https_core
 import (
 	"fmt"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
-	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/responses"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/responses"
 
 	"github.com/gin-gonic/gin"
 )

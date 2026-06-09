@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
-	"github.com/IzomSoftware/GinWrapper/utils/hash_util"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/utils/hash_util"
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/google/uuid"
 )

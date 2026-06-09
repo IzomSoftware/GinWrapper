@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
-	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/logger"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -158,7 +158,7 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 				LastRate: time.Now().UnixMilli(),
 			}
 			err = HSetValue(c, ip, map[string]any{
-				"Rate": user.Rate,
+				"Rate":     user.Rate,
 				"LastRate": user.LastRate,
 			})
 			rate = user.Rate
@@ -171,7 +171,7 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 
 	rateStr, ok := rate.(string)
 	val, err := strconv.ParseInt(rateStr, 10, 64)
-	
+
 	if !ok {
 		if err != nil {
 			logger.LogError(fmt.Sprintf("%s", err))
@@ -183,7 +183,6 @@ func GetRateLimit(c context.Context, ip string) (int64, error) {
 	return val, nil
 }
 
-
 func GetLastRateLimit(c *gin.Context, ip string) (int64, error) {
 	lastRate, err := HGetValue(c, ip, "LastRate")
 
@@ -194,7 +193,7 @@ func GetLastRateLimit(c *gin.Context, ip string) (int64, error) {
 				LastRate: time.Now().UnixMilli(),
 			}
 			err = HSetValue(c, ip, map[string]any{
-				"Rate": user.Rate,
+				"Rate":     user.Rate,
 				"LastRate": user.LastRate,
 			})
 			lastRate = user.LastRate

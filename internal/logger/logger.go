@@ -6,7 +6,7 @@ import (
 
 	"container/list"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -16,7 +16,7 @@ var logs = list.New()
 
 func Log() {
 	for {
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 
 		if logs.Len() < 1 {
 			continue

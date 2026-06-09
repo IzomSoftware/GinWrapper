@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
-	httpscore "github.com/IzomSoftware/GinWrapper/https/core"
-	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/responses"
-	"github.com/IzomSoftware/GinWrapper/storage/redis_source"
-	"github.com/IzomSoftware/GinWrapper/storage/sql_source"
-	"github.com/IzomSoftware/GinWrapper/utils/jwt_util"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	httpscore "github.com/IzomSoftware/GinWrapper/internal/https/core"
+	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/responses"
+	"github.com/IzomSoftware/GinWrapper/internal/storage/redis_source"
+	"github.com/IzomSoftware/GinWrapper/internal/storage/sql_source"
+	"github.com/IzomSoftware/GinWrapper/internal/utils/jwt_util"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -46,8 +46,8 @@ func main() {
 		Protections: responses.Protections{
 			RateLimit: responses.RateLimitProtection{
 				Enabled: true,
-				Rate: 5,
-				Time: 1,
+				Rate:    5,
+				Time:    1,
 			},
 		},
 	}

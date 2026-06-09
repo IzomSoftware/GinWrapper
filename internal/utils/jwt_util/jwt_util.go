@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
