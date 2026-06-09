@@ -1,10 +1,10 @@
-package hash_util
+package authentication
 
 import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(password string) (string, error) {
+func GenerateHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -13,6 +13,6 @@ func HashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func IsPasswordValid(hash string, password string) (error) {
+func ValidateHash(hash string, password string) (error) {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }

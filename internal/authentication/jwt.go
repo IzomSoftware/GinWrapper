@@ -7,8 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var InvalidTokenError = fmt.Errorf("Invalid token")
-var UnexpectedSigningMethodError = fmt.Errorf("Unexpected signing method")
+var ErrInvalidToken = fmt.Errorf("Invalid token")
+var ErrInvalidSigning = fmt.Errorf("Invalid signing method")
 
 type JWTPair struct {
 	AccessJWT  string    `json:"access_jwt"`
@@ -24,13 +24,15 @@ type JWTClaims struct {
 
 type JWTManager struct {
 	secret             string
+	issuer             string
 	accessTokenExpiry  time.Duration
 	refreshTokenExpiry time.Duration
 }
 
-func NewJWTManager(secret string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(secret string, issuer string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
 		secret:             secret,
+		issuer: issuer,
 		accessTokenExpiry:  accessExpiry,
 		refreshTokenExpiry: refreshExpiry,
 	}
@@ -46,7 +48,7 @@ func (J *JWTManager) GenerateJWTPair(uuid string, username string) (*JWTPair, er
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(accessExpiry),
-			Issuer:    "GinWrapper",
+			Issuer:    J.issuer,
 		},
 	}
 
@@ -80,7 +82,7 @@ func (J *JWTManager) GenerateJWTPair(uuid string, username string) (*JWTPair, er
 func (J *JWTManager) ValidateJWTSigningMethod(token *jwt.Token) (interface{}, error) {
 	_, ok := token.Method.(*jwt.SigningMethodHMAC)
 	if !ok {
-		return nil, UnexpectedSigningMethodError
+		return nil, ErrInvalidSigning
 	}
 	return J.secret, nil
 }
@@ -91,7 +93,7 @@ func (J *JWTManager) ValidateJWT(jwtStr string) (*JWTClaims, error) {
 		return nil, err
 	}
 	if !token.Valid {
-		return nil, InvalidTokenError
+		return nil, ErrInvalidToken
 	}
 	jwtClaims, _ := token.Claims.(*JWTClaims)
 	return jwtClaims, err
