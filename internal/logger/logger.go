@@ -7,11 +7,11 @@ func SetupLogger(format string, handler *slog.Handler) {
 }
 
 func Info(msg string, args ...any) {
-	slog.Info(msg, args)
+	slog.Info(msg, args...)
 }
 func Warn(msg string, args ...any) {
-	slog.Warn(msg, args)
+	slog.Warn(msg, args...)
 }
 func Error(msg string, args ...any) {
-	slog.Error(msg, args)
+	slog.Error(msg, args...)
 }
