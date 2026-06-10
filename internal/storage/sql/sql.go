@@ -17,13 +17,10 @@ type SQLStorage struct {
 
 func (S *SQLStorage) NewSQLStorage(config *configuration.SQLConfiguration, implementation SQLStorageImplementation, creationSchema string) (*SQLStorage, error) {
 	dbPool, err := implementation.GetDBPool(config)
-	if err != nil {
-		return nil, err
-	}
 	return &SQLStorage{
 		dbPool:            dbPool,
 		SQLCreationSchema: creationSchema,
-	}, nil
+	}, err
 }
 
 func (S *SQLStorage) SetupTables() error {

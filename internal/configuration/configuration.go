@@ -61,6 +61,12 @@ type SQLConfiguration struct {
 	MySQLConfiguration  MySQLConfiguration  `toml:"mysql_configuration"`
 }
 
+
+type RedisConfiguration struct {
+	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
+	DedicatedRedisConfiguration DedicatedRedisConfiguration `toml:"dedicated_redis_configuration"`
+}
+
 /*
  * the EmbeddedRedis configuration struct
  */
@@ -71,7 +77,7 @@ type EmbeddedRedisConfiguration struct {
 /*
  * the Redis configuration struct
  */
-type RedisConfiguration struct {
+type DedicatedRedisConfiguration struct {
 	Enabled             bool   `toml:"enabled"`
 	Hostname            string `toml:"hostname"`
 	Port                uint16 `toml:"port"`
@@ -96,7 +102,7 @@ type DatabaseConfiguration struct {
 	SQLiteConfiguration        SQLiteConfiguration        `toml:"sqlite_configuration"`
 	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
 	MySQLConfiguration         MySQLConfiguration         `toml:"mysql_configuration"`
-	RedisConfiguration         RedisConfiguration         `toml:"redis_configuration"`
+	DedicatedRedisConfiguration         DedicatedRedisConfiguration         `toml:"redis_configuration"`
 }
 
 /*
@@ -185,7 +191,7 @@ var DefaultConfig = Configuration{
 			ConnectionsMaxLifetime: 3600,
 			ParseTime:              true,
 		},
-		RedisConfiguration: RedisConfiguration{
+		DedicatedRedisConfiguration: DedicatedRedisConfiguration{
 			Enabled:             false,
 			Hostname:            "127.0.0.1",
 			Port:                6379,
@@ -229,7 +235,7 @@ var cannotInitializeMultipleStorageSourcesAtOnce = fmt.Errorf("Can't enable mult
 // Returns true if storage is configured correctly
 func IsStorageConfigured() bool {
 	databaseConfig := ConfigHolder.DatabaseConfiguration
-	isRedisEnabled := databaseConfig.RedisConfiguration.Enabled || databaseConfig.EmbeddedRedisConfiguration.Enabled
+	isRedisEnabled := databaseConfig.DedicatedRedisConfiguration.Enabled || databaseConfig.EmbeddedRedisConfiguration.Enabled
 	isSqlEnabled := databaseConfig.MySQLConfiguration.Enabled || databaseConfig.SQLiteConfiguration.Enabled
 
 	return isRedisEnabled && isSqlEnabled
@@ -262,7 +268,7 @@ func SetupConfig(fileName string) error {
 	databaseConfig := ConfigHolder.DatabaseConfiguration
 	if (databaseConfig.MySQLConfiguration.Enabled &&
 		databaseConfig.SQLiteConfiguration.Enabled) ||
-		(databaseConfig.RedisConfiguration.Enabled &&
+		(databaseConfig.DedicatedRedisConfiguration.Enabled &&
 			databaseConfig.EmbeddedRedisConfiguration.Enabled) {
 		return cannotInitializeMultipleStorageSourcesAtOnce
 	}
