@@ -1,3 +1,4 @@
+# The project is currently under heavy maintenance. a stable release would be published soon.
 # GinWrapper
 
 # Usage
