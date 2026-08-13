@@ -6,11 +6,17 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type EmbeddedRedisStorage struct{}
+type EmbeddedRedisStorage struct {
+	MiniRedis *miniredis.Miniredis
+}
 
 func (E *EmbeddedRedisStorage) GetRedisOpts(config *configuration.RedisConfiguration) (*redis.Options, error) {
 	miniRedis, err := miniredis.Run()
+	if err != nil {
+		return nil, err
+	}
+	E.MiniRedis = miniRedis
 	return &redis.Options{
-		Addr:  miniRedis.Addr(),
-	}, err
+		Addr: miniRedis.Addr(),
+	}, nil
 }

@@ -14,7 +14,7 @@ type DedicatedRedisStorage struct{}
 func (D *DedicatedRedisStorage) GetRedisOpts(config *configuration.RedisConfiguration) (*redis.Options, error) {
 	dedicatedConfig := config.DedicatedRedisConfiguration
 	redisOpts := &redis.Options{
-		Addr:         fmt.Sprintf("%s:%x", dedicatedConfig.Hostname, dedicatedConfig.Port),
+		Addr:         fmt.Sprintf("%s:%d", dedicatedConfig.Hostname, dedicatedConfig.Port),
 		Username:     dedicatedConfig.Username,
 		Password:     dedicatedConfig.Password,
 		DB:           dedicatedConfig.Database,
@@ -25,9 +25,6 @@ func (D *DedicatedRedisStorage) GetRedisOpts(config *configuration.RedisConfigur
 		DialTimeout:  time.Duration(dedicatedConfig.DialTimeout) * time.Second,
 		ReadTimeout:  time.Duration(dedicatedConfig.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(dedicatedConfig.WriteTimeoutSec) * time.Second,
-		TLSConfig: &tls.Config{
-			InsecureSkipVerify: dedicatedConfig.SkipTLSVerification,
-		},
 	}
 
 	if dedicatedConfig.TLSEnabled {

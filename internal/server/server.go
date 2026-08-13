@@ -1,44 +1,72 @@
 package server
 
 import (
-	"net/http"
+	"fmt"
 
 	"github.com/IzomSoftware/GinWrapper/internal/authentication"
+	"github.com/IzomSoftware/GinWrapper/internal/configuration"
 	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/internal/storage"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	JWTManager authentication.JWTManager
+	configuration *configuration.Config
+	storage       *storage.Storage
+	jwtManager    *authentication.JWTManager
+	Engine        *gin.Engine
 }
 
-/*
- * Aborts & logs the connection with the given http status code.
- */
-func (S *Server) AbortConnection(c *gin.Context, status int) {
-	c.AbortWithStatus(status)
-
-	logger.Info("Connection %s aborted with: %d", c.ClientIP(), status)
+func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager) *Server {
+	return &Server{
+		configuration: configuration,
+		storage:       storage,
+		jwtManager:    jwtManager,
+		Engine:        gin.New(),
+	}
 }
 
-/*
- * Aborts & logs the suspicious connection with 403 forbidden http status code.
- */
-func (S *Server) AbortSuspiciousConnection(c *gin.Context) {
-	S.AbortConnection(c, http.StatusForbidden)
-
-	logger.Info("Connection %s rejected", c.ClientIP())
+func (S *Server) Use(handlerfuncs ...gin.HandlerFunc) {
+	S.Engine.Use(handlerfuncs...)
 }
 
-/*
- * Bans & logs the banned suspicious connection with 403 forbidden http status code.
- */
-func (S *Server) BanConnection(ip string, c *gin.Context) {
-	S.AbortSuspiciousConnection(c)
+func (S *Server) RegisterRoutes(routes map[string]map[string]gin.HandlerFunc) {
+	for method, paths := range routes {
+		for path, handler := range paths {
+			S.Engine.Handle(method, path, handler)
+		}
+	}
+}
 
-	// if err := sql_source.BanIP(ip); err != nil {
-	// 	logger.Error(fmt.Sprintf("Connection %s is already banned", ip))
-	// }
+func (S *Server) RegisterRoute(method string, path string, handler gin.HandlerFunc) {
+	S.Engine.Handle(method, path, handler)
+}
 
-	logger.Info("Connection %s banned", c.ClientIP())
+func (S *Server) LoadTemplates(path string) {
+	S.Engine.LoadHTMLGlob(path)
+}
+
+func (S *Server) LoadStatics(basePath string, path string) {
+	S.Engine.Static(basePath, path)
+}
+
+func (S *Server) SetNoRoute(handler gin.HandlerFunc) {
+	S.Engine.NoRoute(handler)
+}
+
+func (S *Server) ListenAndServe() error {
+	httpServerConfiguration := S.configuration.HTTPServer
+	if !httpServerConfiguration.Enabled {
+		return nil
+	}
+
+	gin.SetMode(gin.ReleaseMode)
+
+	addr := fmt.Sprintf("%s:%d", httpServerConfiguration.Address, httpServerConfiguration.Port)
+	logger.Info("listening", "addr", addr)
+
+	if httpServerConfiguration.TlsConfiguration.Enable {
+		return S.Engine.RunTLS(addr, httpServerConfiguration.TlsConfiguration.CertFile, httpServerConfiguration.TlsConfiguration.KeyFile)
+	}
+	return S.Engine.Run(addr)
 }

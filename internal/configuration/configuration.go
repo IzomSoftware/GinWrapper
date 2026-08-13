@@ -7,48 +7,35 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-/*
- * the TLS configuration struct
- */
-type HttpsTlsConfiguration struct {
+type TlsConfiguration struct {
 	Enable   bool   `toml:"enable"`
 	CertFile string `toml:"cert_file"`
 	KeyFile  string `toml:"key_file"`
 }
 
-/*
- * the HTTP configuration struct
- */
 type HTTPServer struct {
-	Enabled          bool                  `toml:"enabled"`
-	Address          string                `toml:"address"`
-	Port             int                   `toml:"port"`
-	TemplatesDir     string                `toml:"template_dir"`
-	AssetsDir        string                `toml:"assets_dir"`
-	TlsConfiguration HttpsTlsConfiguration `toml:"tls_configuration"`
+	Enabled          bool             `toml:"enabled"`
+	Address          string           `toml:"address"`
+	Port             int              `toml:"port"`
+	TemplatesDir     string           `toml:"template_dir"`
+	AssetsDir        string           `toml:"assets_dir"`
+	TlsConfiguration TlsConfiguration `toml:"tls_configuration"`
 }
 
-/*
- * the SQLite configuration struct
- */
 type SQLiteConfiguration struct {
 	Enabled          bool   `toml:"enabled"`
 	DatabaseLocation string `toml:"database_location"`
 }
 
-/*
- * the MYSQL configuration struct
- */
 type MySQLConfiguration struct {
-	Enabled             bool   `toml:"enabled"`
-	Hostname            string `toml:"hostname"`
-	Port                uint16 `toml:"port"`
-	Username            string `toml:"username"`
-	Password            string `toml:"password"`
-	Database            string `toml:"database"`
-	TLSEnabled          bool   `toml:"tls_enabled"`
-	SkipTLSVerification bool   `toml:"skip_tls_verification"`
-	// utf8mb4
+	Enabled                bool   `toml:"enabled"`
+	Hostname               string `toml:"hostname"`
+	Port                   uint16 `toml:"port"`
+	Username               string `toml:"username"`
+	Password               string `toml:"password"`
+	Database               string `toml:"database"`
+	TLSEnabled             bool   `toml:"tls_enabled"`
+	SkipTLSVerification    bool   `toml:"skip_tls_verification"`
 	Charset                string `toml:"charset"`
 	MaxOpenConnections     int    `toml:"max_open_connections"`
 	MaxIdleConnections     int    `toml:"max_idle_connections"`
@@ -56,27 +43,29 @@ type MySQLConfiguration struct {
 	ParseTime              bool   `toml:"parse_time"`
 }
 
+type PostgreSQLConfiguration struct {
+	Enabled                bool   `toml:"enabled"`
+	Hostname               string `toml:"hostname"`
+	Port                   uint16 `toml:"port"`
+	Username               string `toml:"username"`
+	Password               string `toml:"password"`
+	Database               string `toml:"database"`
+	SSLMode                string `toml:"ssl_mode"`
+	MaxOpenConnections     int    `toml:"max_open_connections"`
+	MaxIdleConnections     int    `toml:"max_idle_connections"`
+	ConnectionsMaxLifetime int    `toml:"connections_max_lifetime_seconds"`
+}
+
 type SQLConfiguration struct {
-	SQLiteConfiguration SQLiteConfiguration `toml:"sqlite_configuration"`
-	MySQLConfiguration  MySQLConfiguration  `toml:"mysql_configuration"`
+	SQLiteConfiguration     SQLiteConfiguration     `toml:"sqlite_configuration"`
+	MySQLConfiguration      MySQLConfiguration      `toml:"mysql_configuration"`
+	PostgreSQLConfiguration PostgreSQLConfiguration `toml:"postgresql_configuration"`
 }
 
-
-type RedisConfiguration struct {
-	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
-	DedicatedRedisConfiguration DedicatedRedisConfiguration `toml:"dedicated_redis_configuration"`
-}
-
-/*
- * the EmbeddedRedis configuration struct
- */
 type EmbeddedRedisConfiguration struct {
 	Enabled bool `toml:"enabled"`
 }
 
-/*
- * the Redis configuration struct
- */
 type DedicatedRedisConfiguration struct {
 	Enabled             bool   `toml:"enabled"`
 	Hostname            string `toml:"hostname"`
@@ -95,43 +84,34 @@ type DedicatedRedisConfiguration struct {
 	SkipTLSVerification bool   `toml:"skip_tls_verification"`
 }
 
-/*
- * the whole storage configuration struct
- */
-type DatabaseConfiguration struct {
-	SQLiteConfiguration        SQLiteConfiguration        `toml:"sqlite_configuration"`
-	EmbeddedRedisConfiguration EmbeddedRedisConfiguration `toml:"embedded_redis_configuration"`
-	MySQLConfiguration         MySQLConfiguration         `toml:"mysql_configuration"`
-	DedicatedRedisConfiguration         DedicatedRedisConfiguration         `toml:"redis_configuration"`
+type RedisConfiguration struct {
+	EmbeddedRedisConfiguration  EmbeddedRedisConfiguration  `toml:"embedded_redis_configuration"`
+	DedicatedRedisConfiguration DedicatedRedisConfiguration `toml:"dedicated_redis_configuration"`
 }
 
-/*
- * the JWT related configurations struct
- */
+type DatabaseConfiguration struct {
+	SQLiteConfiguration         SQLiteConfiguration         `toml:"sqlite_configuration"`
+	MySQLConfiguration          MySQLConfiguration          `toml:"mysql_configuration"`
+	PostgreSQLConfiguration     PostgreSQLConfiguration     `toml:"postgresql_configuration"`
+	EmbeddedRedisConfiguration  EmbeddedRedisConfiguration  `toml:"embedded_redis_configuration"`
+	DedicatedRedisConfiguration DedicatedRedisConfiguration `toml:"dedicated_redis_configuration"`
+}
+
 type JWTProtection struct {
 	JWTSecret     string `toml:"jwt_secret"`
 	JWTExpiration int    `toml:"jwt_expiration"`
 }
 
-/*
- * the BasicProtections configuration struct
- */
 type BasicProtections struct {
 	Provide    bool `toml:"provide"`
 	Aggressive bool `toml:"aggressive"`
 }
 
-/*
- * the OrderingProtection configuration struct
- */
 type OrderingProtection struct {
 	Enabled bool                `toml:"enabled"`
 	Orders  map[string][]string `toml:"orders"`
 }
 
-/*
- * the whole protections configuration struct
- */
 type Protections struct {
 	UserPassAPI        bool               `toml:"user_pass_api"`
 	APIUserAgent       string             `toml:"api_user_agent"`
@@ -140,21 +120,14 @@ type Protections struct {
 	OrderingProtection OrderingProtection `toml:"ordering_protection"`
 }
 
-/*
- * the whole configuration itself
- */
-type Configuration struct {
+type Config struct {
 	Debug                 bool                  `toml:"debug"`
 	HTTPServer            HTTPServer            `toml:"http_server"`
 	DatabaseConfiguration DatabaseConfiguration `toml:"database"`
 	Protections           Protections           `toml:"protections"`
 }
 
-// The configuration holder (inside ram of course)
-var ConfigHolder *Configuration
-
-// The default configuration we provide to help developers
-var DefaultConfig = Configuration{
+var Default = Config{
 	Debug: true,
 	HTTPServer: HTTPServer{
 		Enabled:      true,
@@ -162,7 +135,7 @@ var DefaultConfig = Configuration{
 		Port:         2009,
 		TemplatesDir: "./assets/templates/",
 		AssetsDir:    "./assets/",
-		TlsConfiguration: HttpsTlsConfiguration{
+		TlsConfiguration: TlsConfiguration{
 			Enable:   false,
 			CertFile: "cert.pem",
 			KeyFile:  "key.pem",
@@ -190,6 +163,18 @@ var DefaultConfig = Configuration{
 			MaxIdleConnections:     10,
 			ConnectionsMaxLifetime: 3600,
 			ParseTime:              true,
+		},
+		PostgreSQLConfiguration: PostgreSQLConfiguration{
+			Enabled:                false,
+			Hostname:               "127.0.0.1",
+			Port:                   5432,
+			Username:               "postgres",
+			Password:               "",
+			Database:               "GinWrapper",
+			SSLMode:                "disable",
+			MaxOpenConnections:     25,
+			MaxIdleConnections:     5,
+			ConnectionsMaxLifetime: 3600,
 		},
 		DedicatedRedisConfiguration: DedicatedRedisConfiguration{
 			Enabled:             false,
@@ -229,49 +214,36 @@ var DefaultConfig = Configuration{
 	},
 }
 
-// Errors
-var cannotInitializeMultipleStorageSourcesAtOnce = fmt.Errorf("Can't enable multiple Redis/SQL based databases at once")
+var ErrMultipleStorageSources = fmt.Errorf("cannot enable multiple Redis/SQL databases at once")
 
-// Returns true if storage is configured correctly
-func IsStorageConfigured() bool {
-	databaseConfig := ConfigHolder.DatabaseConfiguration
-	isRedisEnabled := databaseConfig.DedicatedRedisConfiguration.Enabled || databaseConfig.EmbeddedRedisConfiguration.Enabled
-	isSqlEnabled := databaseConfig.MySQLConfiguration.Enabled || databaseConfig.SQLiteConfiguration.Enabled
-
-	return isRedisEnabled && isSqlEnabled
+func (c *Config) IsStorageConfigured() bool {
+	return (c.DatabaseConfiguration.DedicatedRedisConfiguration.Enabled || c.DatabaseConfiguration.EmbeddedRedisConfiguration.Enabled) && (c.DatabaseConfiguration.MySQLConfiguration.Enabled || c.DatabaseConfiguration.SQLiteConfiguration.Enabled || c.DatabaseConfiguration.PostgreSQLConfiguration.Enabled)
 }
 
-// Setups the config based on the Default config (which developers should configure)
-func SetupConfig(fileName string) error {
-	ConfigHolder = &DefaultConfig
+func LoadConfiguration(fileName string) (*Config, error) {
+	configuration := Default
 
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		file, err := os.Create(fileName)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
 		defer file.Close()
-
 		encoder := toml.NewEncoder(file)
-		if err := encoder.Encode(ConfigHolder); err != nil {
-			return err
+		if err := encoder.Encode(&configuration); err != nil {
+			return nil, err
 		}
-
-		return nil
+		return &configuration, nil
 	}
 
-	if _, err := toml.DecodeFile(fileName, &ConfigHolder); err != nil {
-		return err
+	if _, err := toml.DecodeFile(fileName, &configuration); err != nil {
+		return nil, err
 	}
 
-	databaseConfig := ConfigHolder.DatabaseConfiguration
-	if (databaseConfig.MySQLConfiguration.Enabled &&
-		databaseConfig.SQLiteConfiguration.Enabled) ||
-		(databaseConfig.DedicatedRedisConfiguration.Enabled &&
-			databaseConfig.EmbeddedRedisConfiguration.Enabled) {
-		return cannotInitializeMultipleStorageSourcesAtOnce
+	databaseConfiguration := configuration.DatabaseConfiguration
+	if (databaseConfiguration.SQLiteConfiguration.Enabled && databaseConfiguration.MySQLConfiguration.Enabled) || (databaseConfiguration.DedicatedRedisConfiguration.Enabled && databaseConfiguration.EmbeddedRedisConfiguration.Enabled) {
+		return nil, ErrMultipleStorageSources
 	}
 
-	return nil
+	return &configuration, nil
 }

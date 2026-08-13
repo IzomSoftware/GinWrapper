@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupLogger(format string, handler *slog.Handler) {
-	slog.SetDefault(slog.New(*handler))
+func SetupLogger(handler slog.Handler) {
+	slog.SetDefault(slog.New(handler))
 }
 
 func Info(msg string, args ...any) {
@@ -19,7 +19,6 @@ func Warn(msg string, args ...any) {
 func Error(msg string, args ...any) {
 	slog.Error(msg, args...)
 }
-
 func LogConnection(connection *gin.Context) {
-	Info("[%s] -> %s", connection.ClientIP(), connection.Request.URL.Path)
+	Info("connection", "ip", connection.ClientIP(), "path", connection.Request.URL.Path)
 }

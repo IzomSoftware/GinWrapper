@@ -6,36 +6,41 @@ import (
 	"github.com/IzomSoftware/GinWrapper/internal/configuration"
 )
 
-type SQLStorageImplementation interface {
+type StorageImplementation interface {
 	GetDBPool(config *configuration.SQLConfiguration) (*sql.DB, error)
 }
 
-type SQLStorage struct {
-	dbPool            *sql.DB
-	SQLCreationSchema string
+type Storage struct {
+	pool           *sql.DB
+	CreationSchema string
 }
 
-func (S *SQLStorage) NewSQLStorage(config *configuration.SQLConfiguration, implementation SQLStorageImplementation, creationSchema string) (*SQLStorage, error) {
-	dbPool, err := implementation.GetDBPool(config)
-	return &SQLStorage{
-		dbPool:            dbPool,
-		SQLCreationSchema: creationSchema,
-	}, err
+func New(config *configuration.SQLConfiguration, impl StorageImplementation, creationSchema string) (*Storage, error) {
+	pool, err := impl.GetDBPool(config)
+	if err != nil {
+		return nil, err
+	}
+	return &Storage{
+		pool:           pool,
+		CreationSchema: creationSchema,
+	}, nil
 }
 
-func (S *SQLStorage) SetupTables() error {
-	_, err := S.dbPool.Exec(
-		S.SQLCreationSchema,
-	)
+func (S *Storage) SetupTables() error {
+	_, err := S.pool.Exec(S.CreationSchema)
 	return err
 }
 
-func (S *SQLStorage) Ping() error {
-	return S.dbPool.Ping()
+func (S *Storage) Ping() error {
+	return S.pool.Ping()
 }
 
-func (S *SQLStorage) ExecuteUpdate(query string, args ...any) error {
-	tx, err := S.dbPool.Begin()
+func (S *Storage) Close() error {
+	return S.pool.Close()
+}
+
+func (S *Storage) ExecuteUpdate(query string, args ...any) error {
+	tx, err := S.pool.Begin()
 	if err != nil {
 		return err
 	}
@@ -45,14 +50,13 @@ func (S *SQLStorage) ExecuteUpdate(query string, args ...any) error {
 	if err != nil {
 		return err
 	}
-
 	return tx.Commit()
 }
 
-func (S *SQLStorage) Get(query string, args ...any) (any, error) {
-	var result any
+func (S *Storage) QueryRow(query string, args ...any) *sql.Row {
+	return S.pool.QueryRow(query, args...)
+}
 
-	err := S.dbPool.QueryRow(query, args...).Scan(&result)
-
-	return result, err
+func (S *Storage) Query(query string, args ...any) (*sql.Rows, error) {
+	return S.pool.Query(query, args...)
 }
