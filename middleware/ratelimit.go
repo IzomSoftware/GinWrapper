@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/internal/storage/redis"
+	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
 

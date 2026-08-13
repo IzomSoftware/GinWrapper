@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/IzomSoftware/GinWrapper/internal/logger"
+	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/redis/go-redis/v9"
 )
 

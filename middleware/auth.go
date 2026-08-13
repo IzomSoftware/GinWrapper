@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/IzomSoftware/GinWrapper/internal/authentication"
+	"github.com/IzomSoftware/GinWrapper/authentication"
 	"github.com/gin-gonic/gin"
 )
 

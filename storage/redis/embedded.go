@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 )

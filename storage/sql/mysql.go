@@ -3,10 +3,11 @@ package sql
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/IzomSoftware/GinWrapper/configuration"
 )
 
 type MYSQLStorage struct{}

@@ -3,7 +3,7 @@ package sql
 import (
 	"database/sql"
 
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 )
 
 type StorageImplementation interface {

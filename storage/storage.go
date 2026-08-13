@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
-	"github.com/IzomSoftware/GinWrapper/internal/storage/redis"
-	"github.com/IzomSoftware/GinWrapper/internal/storage/sql"
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/storage/redis"
+	"github.com/IzomSoftware/GinWrapper/storage/sql"
 )
 
 type Storage struct {

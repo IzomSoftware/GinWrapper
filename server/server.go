@@ -3,10 +3,10 @@ package server
 import (
 	"fmt"
 
-	"github.com/IzomSoftware/GinWrapper/internal/authentication"
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
-	"github.com/IzomSoftware/GinWrapper/internal/logger"
-	"github.com/IzomSoftware/GinWrapper/internal/storage"
+	"github.com/IzomSoftware/GinWrapper/authentication"
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/storage"
 	"github.com/gin-gonic/gin"
 )
 

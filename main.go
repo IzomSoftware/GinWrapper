@@ -7,13 +7,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/IzomSoftware/GinWrapper/internal/authentication"
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
-	"github.com/IzomSoftware/GinWrapper/internal/logger"
-	"github.com/IzomSoftware/GinWrapper/internal/middleware"
-	"github.com/IzomSoftware/GinWrapper/internal/response"
-	"github.com/IzomSoftware/GinWrapper/internal/server"
-	"github.com/IzomSoftware/GinWrapper/internal/storage"
+	"github.com/IzomSoftware/GinWrapper/authentication"
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/middleware"
+	"github.com/IzomSoftware/GinWrapper/response"
+	"github.com/IzomSoftware/GinWrapper/server"
+	"github.com/IzomSoftware/GinWrapper/storage"
 	"github.com/gin-gonic/gin"
 )
 

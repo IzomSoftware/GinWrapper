@@ -2,9 +2,10 @@ package sql
 
 import (
 	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/IzomSoftware/GinWrapper/internal/configuration"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 )
 
 type SQLiteStorage struct{}
