@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
@@ -35,12 +36,7 @@ var script = redis.Script(`
     return 0
 `)
 
-type RateLimitConfig struct {
-	Rate   int64
-	Window int64
-}
-
-func RateLimit(redis *redis.Storage, configuration RateLimitConfig) gin.HandlerFunc {
+func RateLimit(redis *redis.Storage, configuration configuration.RateLimitProtection) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
 		now := time.Now().UnixMilli()

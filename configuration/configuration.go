@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/IzomSoftware/GinWrapper/authentication"
 )
 
 type TlsConfiguration struct {
@@ -97,14 +98,14 @@ type DatabaseConfiguration struct {
 	DedicatedRedisConfiguration DedicatedRedisConfiguration `toml:"dedicated_redis_configuration"`
 }
 
+type RateLimitProtection struct {
+	Enabled bool `toml:"enabled"`
+	Rate    int  `toml:"rate"`
+	Window  int  `toml:"window"`
+}
 type JWTProtection struct {
 	JWTSecret     string `toml:"jwt_secret"`
 	JWTExpiration int    `toml:"jwt_expiration"`
-}
-
-type BasicProtections struct {
-	Provide    bool `toml:"provide"`
-	Aggressive bool `toml:"aggressive"`
 }
 
 type OrderingProtection struct {
@@ -113,11 +114,10 @@ type OrderingProtection struct {
 }
 
 type Protections struct {
-	UserPassAPI        bool               `toml:"user_pass_api"`
-	APIUserAgent       string             `toml:"api_user_agent"`
-	BasicProtections   BasicProtections   `toml:"basic_protections"`
-	JWTProtection      JWTProtection      `toml:"jwt_protection"`
-	OrderingProtection OrderingProtection `toml:"ordering_protection"`
+	APIUserAgent        string              `toml:"api_user_agent_protection"`
+	RateLimitProtection RateLimitProtection `toml:"rate_limit_protection"`
+	JWTProtection       JWTProtection       `toml:"jwt_protection"`
+	OrderingProtection  OrderingProtection  `toml:"ordering_protection"`
 }
 
 type Config struct {
@@ -194,14 +194,14 @@ var Default = Config{
 		},
 	},
 	Protections: Protections{
-		UserPassAPI: true,
-		BasicProtections: BasicProtections{
-			Provide:    true,
-			Aggressive: true,
-		},
-		APIUserAgent: "Test Client 1.0/b (Software)",
-		OrderingProtection: OrderingProtection{
+		APIUserAgent: "",
+		RateLimitProtection: RateLimitProtection{
 			Enabled: true,
+			Rate:    30,
+			Window:  60,
+		},
+		OrderingProtection: OrderingProtection{
+			Enabled: false,
 			Orders: map[string][]string{
 				"/auth":      {"/", "/home"},
 				"/dashboard": {"/auth"},
@@ -230,6 +230,11 @@ func LoadConfiguration(fileName string) (*Config, error) {
 		}
 		defer file.Close()
 		encoder := toml.NewEncoder(file)
+		secret, err := authentication.GenerateRandomSecret(32)
+		if err != nil {
+			return nil, err
+		}
+		configuration.Protections.JWTProtection.JWTSecret = secret
 		if err := encoder.Encode(&configuration); err != nil {
 			return nil, err
 		}

@@ -45,16 +45,8 @@ func main() {
 	}
 	defer storage.Close()
 
-	jwtSecret := configuration.Protections.JWTProtection.JWTSecret
-	if jwtSecret == "" {
-		jwtSecret, err = authentication.GenerateRandomSecret(32)
-		if err != nil {
-			panic("Failed to generate a random secret for JWT")
-		}
-	}
-
 	jwtManager := authentication.NewJWTManager(
-		jwtSecret,
+		configuration.Protections.JWTProtection.JWTSecret,
 		"GinWrapper",
 		time.Duration(configuration.Protections.JWTProtection.JWTExpiration)*time.Second,
 		24*time.Hour,
@@ -65,15 +57,9 @@ func main() {
 
 	if storage.Redis != nil {
 		server.Use(middleware.BanCheck(storage.Redis))
-	}
-	if configuration.Protections.APIUserAgent != "" {
-		server.Use(middleware.UserAgent(configuration.Protections.APIUserAgent))
-	}
-	if configuration.Protections.UserPassAPI {
-		server.Use(middleware.Authentication(jwtManager))
-	}
-	if storage.Redis != nil {
-		server.Use(middleware.RateLimit(storage.Redis, middleware.RateLimitConfig{Rate: 30, Window: 60}))
+		if configuration.Protections.RateLimitProtection.Enabled {
+			server.Use(middleware.RateLimit(storage.Redis, configuration.Protections.RateLimitProtection))
+		}
 	}
 
 	server.RegisterRoute("POST", "/api/auth/register", func(c *gin.Context) {
@@ -131,10 +117,12 @@ func main() {
 	})
 
 	protected := server.Engine.Group("/api/protected")
+	protected.Use(middleware.UserAgent(configuration.Protections.APIUserAgent))
 	protected.Use(middleware.Authentication(jwtManager))
 
 	server.LoadTemplates(configuration.HTTPServer.TemplatesDir + "*")
 	server.LoadStatics(configuration.HTTPServer.AssetsDir, "."+configuration.HTTPServer.AssetsDir)
+
 	if err := server.ListenAndServe(); err != nil {
 		panic(fmt.Sprintf("Failed to listen: %v", err))
 	}
