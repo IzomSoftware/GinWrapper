@@ -69,6 +69,12 @@ func main() {
 	if configuration.Protections.APIUserAgent != "" {
 		server.Use(middleware.UserAgent(configuration.Protections.APIUserAgent))
 	}
+	if configuration.Protections.UserPassAPI {
+		server.Use(middleware.Authentication(jwtManager))
+	}
+	if storage.Redis != nil {
+		server.Use(middleware.RateLimit(storage.Redis, middleware.RateLimitConfig{Rate: 30, Window: 60}))
+	}
 
 	server.RegisterRoute("POST", "/api/auth/register", func(c *gin.Context) {
 		username, password := c.PostForm("username"), c.PostForm("password")
@@ -126,9 +132,6 @@ func main() {
 
 	protected := server.Engine.Group("/api/protected")
 	protected.Use(middleware.Authentication(jwtManager))
-	if storage.Redis != nil {
-		protected.Use(middleware.RateLimit(storage.Redis, middleware.RateLimitConfig{Rate: 30, Window: 60}))
-	}
 
 	server.LoadTemplates(configuration.HTTPServer.TemplatesDir + "*")
 	server.LoadStatics(configuration.HTTPServer.AssetsDir, "."+configuration.HTTPServer.AssetsDir)
