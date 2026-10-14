@@ -47,13 +47,13 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 			}
 		}
 		if token == "" {
-			c.Redirect(http.StatusFound, "/register")
+			c.Status(http.StatusFound)
 			c.Abort()
 			return
 		}
 		claims, err := jwtManager.ValidateJWT(token)
 		if err != nil || claims.TokenType != "access" {
-			c.Redirect(http.StatusFound, "/register")
+			c.Status(http.StatusFound)
 			c.Abort()
 			return
 		}

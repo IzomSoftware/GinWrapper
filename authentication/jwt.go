@@ -134,7 +134,7 @@ func (J *JWTManager) RefreshToken(refreshStr string) (*JWTPair, error) {
 }
 func (J *JWTManager) SetAuthCookies(c *gin.Context, pair *JWTPair, maxAge int) {
     c.SetCookie(J.CookieName, pair.AccessJWT, maxAge, "/", "", false, true)
-    c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Hours()), "/", "", false, true)
+    c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Seconds()), "/", "", false, true)
 }
 
 func (J *JWTManager) ClearAuthCookies(c *gin.Context) {
