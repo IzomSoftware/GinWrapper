@@ -104,8 +104,10 @@ type RateLimitProtection struct {
 	Window  int  `toml:"window"`
 }
 type JWTProtection struct {
-	JWTSecret     string `toml:"jwt_secret"`
-	JWTExpiration int    `toml:"jwt_expiration"`
+	JWTSecret         string `toml:"jwt_secret"`
+	JWTExpiration     int    `toml:"jwt_expiration"`
+	CookieName        string `toml:"cookie_name"`
+	RefreshCookieName string `toml:"refresh_cookie_name"`
 }
 
 type OrderingProtection struct {
@@ -208,8 +210,10 @@ var Default = Config{
 			},
 		},
 		JWTProtection: JWTProtection{
-			JWTSecret:     "",
-			JWTExpiration: 60,
+			JWTSecret:         "",
+			JWTExpiration:     60,
+			CookieName:        "access_token",
+			RefreshCookieName: "refresh_token",
 		},
 	},
 }

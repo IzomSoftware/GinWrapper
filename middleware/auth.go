@@ -35,3 +35,31 @@ func Authentication(jwtManager *authentication.JWTManager) gin.HandlerFunc {
 		c.Next()
 	}
 }
+func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := ""
+		if authHeader := c.GetHeader("Authorization"); len(authHeader) > 7 && strings.EqualFold(authHeader[:7], "Bearer ") {
+			token = strings.TrimSpace(authHeader[7:])
+		}
+		if token == "" {
+			if cookie, err := c.Cookie(jwtManager.CookieName); err == nil && cookie != "" {
+				token = cookie
+			}
+		}
+		if token == "" {
+			c.Redirect(http.StatusFound, "/register")
+			c.Abort()
+			return
+		}
+		claims, err := jwtManager.ValidateJWT(token)
+		if err != nil || claims.TokenType != "access" {
+			c.Redirect(http.StatusFound, "/register")
+			c.Abort()
+			return
+		}
+		c.Set("claims", claims)
+		c.Set("uuid", claims.Uuid)
+		c.Set("username", claims.Username)
+		c.Next()
+	}
+}

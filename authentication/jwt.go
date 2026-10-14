@@ -4,8 +4,10 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var ErrInvalidToken = fmt.Errorf("Invalid token")
@@ -28,6 +30,8 @@ type JWTClaims struct {
 type JWTManager struct {
 	secret             string
 	issuer             string
+	CookieName         string
+	RefreshCookieName  string
 	accessTokenExpiry  time.Duration
 	refreshTokenExpiry time.Duration
 }
@@ -40,10 +44,12 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(secret string, issuer string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
 		secret:             secret,
 		issuer:             issuer,
+		CookieName:         cookieName,
+		RefreshCookieName:  refreshCookieName,
 		accessTokenExpiry:  accessExpiry,
 		refreshTokenExpiry: refreshExpiry,
 	}
@@ -125,4 +131,13 @@ func (J *JWTManager) RefreshToken(refreshStr string) (*JWTPair, error) {
 	}
 
 	return J.GenerateJWTPair(claims.Uuid, claims.Username)
+}
+func (J *JWTManager) SetAuthCookies(c *gin.Context, pair *JWTPair, maxAge int) {
+    c.SetCookie(J.CookieName, pair.AccessJWT, maxAge, "/", "", false, true)
+    c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Hours()), "/", "", false, true)
+}
+
+func (J *JWTManager) ClearAuthCookies(c *gin.Context) {
+    c.SetCookie(J.CookieName, "", -1, "/", "", false, true)
+    c.SetCookie(J.RefreshCookieName, "", -1, "/", "", false, true)
 }
