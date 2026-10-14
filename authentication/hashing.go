@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"uuid"
+	"github.com/google/uuid"
 
 	"golang.org/x/crypto/bcrypt"
 )
