@@ -3,9 +3,11 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/IzomSoftware/GinWrapper/authentication"
 	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/file"
 	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage"
@@ -40,18 +42,12 @@ func (S *Server) RegisterRoutes(routes map[string]map[string]gin.HandlerFunc) {
 	}
 }
 
-type AuthenticationFields struct {
-	Identifier string
-	Secret     string
-	Query      string
-}
-
-func (S *Server) RegisterAuthRoutes(fields AuthenticationFields) {
+func (S *Server) RegisterAuthRoutes(identifier string, secret string, query string) {
 	S.Engine.POST("/api/auth/login", func(c *gin.Context) {
-		key, val := c.PostForm(fields.Identifier), c.PostForm(fields.Secret)
+		key, val := c.PostForm(identifier), c.PostForm(secret)
 		var hash string
 		err := S.storage.SQL.QueryRow(
-			fields.Query, key,
+			query, key,
 		).Scan(&hash)
 		if err != nil || authentication.ValidateHash(hash, val) != nil {
 			response.AbortUnauthorized(c)
@@ -78,6 +74,32 @@ func (S *Server) RegisterAuthRoutes(fields AuthenticationFields) {
 		S.jwtManager.ClearAuthCookies(c)
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
+}
+func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix string, uploadDir string, allowedExt map[string]struct{}, maxSize int64, middlewares ...gin.HandlerFunc) {
+	handler := func(c *gin.Context) {
+		uploadedFile, err := c.FormFile(field)
+		if err != nil {
+			response.AbortInternalError(c)
+			return
+		}
+		if uploadedFile.Size > maxSize {
+			response.Abort(c, http.StatusRequestEntityTooLarge)
+			return
+		}
+		extension := file.GetFileExtension(uploadedFile.Filename)
+		if _, ok := allowedExt[extension]; !ok {
+			response.Abort(c, http.StatusUnprocessableEntity)
+			return
+		}
+		_ = os.MkdirAll(uploadDir, 0755)
+		fileName := authentication.GenerateUUID() + extension
+		if err := c.SaveUploadedFile(uploadedFile, fmt.Sprintf("%s/%s", uploadDir, fileName)); err != nil {
+			response.AbortInternalError(c)
+            return
+		}
+		c.JSON(http.StatusOK, gin.H{"ok": true, "url": urlPrefix + "/" + fileName})
+	}
+	S.Engine.POST(path, append(middlewares, handler)...)
 }
 func (S *Server) RegisterRoute(method string, path string, handler gin.HandlerFunc) {
 	S.Engine.Handle(method, path, handler)
