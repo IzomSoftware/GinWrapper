@@ -79,7 +79,7 @@ func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix st
 	handler := func(c *gin.Context) {
 		uploadedFile, err := c.FormFile(field)
 		if err != nil {
-			response.AbortInternalError(c)
+			response.Abort(c, http.StatusBadRequest)
 			return
 		}
 		if uploadedFile.Size > maxSize {
@@ -88,7 +88,7 @@ func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix st
 		}
 		extension := file.GetFileExtension(uploadedFile.Filename)
 		if _, ok := allowedExt[extension]; !ok {
-			response.Abort(c, http.StatusUnprocessableEntity)
+			response.Abort(c, http.StatusUnsupportedMediaType)
 			return
 		}
 		_ = os.MkdirAll(uploadDir, 0755)
