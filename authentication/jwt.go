@@ -141,3 +141,13 @@ func (J *JWTManager) ClearAuthCookies(c *gin.Context) {
     c.SetCookie(J.CookieName, "", -1, "/", "", false, true)
     c.SetCookie(J.RefreshCookieName, "", -1, "/", "", false, true)
 }
+
+func (J *JWTManager) GetAuthCookie(c *gin.Context) string {
+    cookie, _ := c.Cookie(J.CookieName)
+    return cookie
+}
+
+func (J *JWTManager) GetRefreshCookie(c *gin.Context) string {
+    cookie, _ := c.Cookie(J.RefreshCookieName)
+    return cookie
+}

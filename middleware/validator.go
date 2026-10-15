@@ -7,12 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ValidatePOST(fields...string) gin.HandlerFunc {
+func ValidatePost(fields...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		for _, field := range(fields) {
-			if c.Query(field) == "" {
+			if c.PostForm(field) == "" {
 				response.Abort(c, http.StatusBadRequest)
-				break
+				return
 			}
 		}
 	}
