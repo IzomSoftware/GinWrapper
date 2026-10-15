@@ -2,10 +2,12 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/IzomSoftware/GinWrapper/authentication"
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage"
 	"github.com/gin-gonic/gin"
 )
@@ -38,6 +40,45 @@ func (S *Server) RegisterRoutes(routes map[string]map[string]gin.HandlerFunc) {
 	}
 }
 
+type AuthenticationFields struct {
+	Identifier string
+	Secret     string
+	Query      string
+}
+
+func (S *Server) RegisterAuthRoutes(fields AuthenticationFields) {
+	S.Engine.POST("/api/auth/login", func(c *gin.Context) {
+		key, val := c.PostForm(fields.Identifier), c.PostForm(fields.Secret)
+		var hash string
+		err := S.storage.SQL.QueryRow(
+			fields.Query, key,
+		).Scan(&hash)
+		if err != nil || authentication.ValidateHash(hash, val) != nil {
+			response.AbortUnauthorized(c)
+			return
+		}
+		pair, err := S.jwtManager.GenerateJWTPair(key, key)
+		if err != nil {
+			response.AbortInternalError(c)
+			return
+		}
+		S.jwtManager.SetAuthCookies(c, pair, S.configuration.Protections.JWTProtection.JWTExpiration)
+		c.JSON(http.StatusOK, pair)
+	})
+	S.Engine.POST("/api/auth/refresh", func(c *gin.Context) {
+		refreshToken := c.PostForm(S.configuration.Protections.JWTProtection.RefreshCookieName)
+		pair, err := S.jwtManager.RefreshToken(refreshToken)
+		if err != nil {
+			response.AbortUnauthorized(c)
+			return
+		}
+		c.JSON(http.StatusOK, pair)
+	})
+	S.Engine.POST("/api/auth/logout", func(c *gin.Context) {
+		S.jwtManager.ClearAuthCookies(c)
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+}
 func (S *Server) RegisterRoute(method string, path string, handler gin.HandlerFunc) {
 	S.Engine.Handle(method, path, handler)
 }

@@ -1,6 +1,7 @@
 package sql
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
@@ -59,4 +60,17 @@ func (S *Storage) QueryRow(query string, args ...any) *sql.Row {
 
 func (S *Storage) Query(query string, args ...any) (*sql.Rows, error) {
 	return S.pool.Query(query, args...)
+}
+
+func (s *Storage) Transaction(ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := s.pool.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := fn(tx); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
