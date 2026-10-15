@@ -62,8 +62,8 @@ func (S *Storage) Query(query string, args ...any) (*sql.Rows, error) {
 	return S.pool.Query(query, args...)
 }
 
-func (s *Storage) Transaction(ctx context.Context, fn func(*sql.Tx) error) error {
-	tx, err := s.pool.BeginTx(ctx, nil)
+func (S *Storage) Transaction(ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := S.pool.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}

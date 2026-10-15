@@ -66,7 +66,7 @@ func (S *Server) RegisterAuthRoutes(fields AuthenticationFields) {
 		c.JSON(http.StatusOK, pair)
 	})
 	S.Engine.POST("/api/auth/refresh", func(c *gin.Context) {
-		refreshToken := c.PostForm(S.configuration.Protections.JWTProtection.RefreshCookieName)
+		refreshToken := c.PostForm("refresh_token")
 		pair, err := S.jwtManager.RefreshToken(refreshToken)
 		if err != nil {
 			response.AbortUnauthorized(c)
