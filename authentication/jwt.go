@@ -28,6 +28,7 @@ type JWTClaims struct {
 }
 
 type JWTManager struct {
+	encryption         bool
 	secret             string
 	issuer             string
 	CookieName         string
@@ -44,8 +45,9 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(encryption bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
+		encryption: encryption,
 		secret:             secret,
 		issuer:             issuer,
 		CookieName:         cookieName,
@@ -106,8 +108,8 @@ func (J *JWTManager) ValidateJWTSigningMethod(token *jwt.Token) (any, error) {
 	return []byte(J.secret), nil
 }
 
-func (J *JWTManager) ValidateJWT(jwtStr string) (*JWTClaims, error) {
-	token, err := jwt.ParseWithClaims(jwtStr, &JWTClaims{}, J.ValidateJWTSigningMethod)
+func (J *JWTManager) ValidateJWT(jwtStr string, tokenType string) (*JWTClaims, error) {
+	token, err := jwt.ParseWithClaims(jwtStr, &JWTClaims{}, J.ValidateJWTSigningMethod, jwt.WithIssuer(J.issuer))
 	if err != nil {
 		return nil, err
 	}
@@ -117,37 +119,37 @@ func (J *JWTManager) ValidateJWT(jwtStr string) (*JWTClaims, error) {
 		return nil, ErrInvalidToken
 	}
 
+	if claims.TokenType != tokenType {
+		return nil, ErrInvalidTokenType
+	}
+
 	return claims, nil
 }
 
 func (J *JWTManager) RefreshToken(refreshStr string) (*JWTPair, error) {
-	claims, err := J.ValidateJWT(refreshStr)
+	claims, err := J.ValidateJWT(refreshStr, "refresh")
 	if err != nil {
 		return nil, err
-	}
-
-	if claims.TokenType != "refresh" {
-		return nil, ErrInvalidTokenType
 	}
 
 	return J.GenerateJWTPair(claims.Uuid, claims.Username)
 }
 func (J *JWTManager) SetAuthCookies(c *gin.Context, pair *JWTPair, maxAge int) {
-    c.SetCookie(J.CookieName, pair.AccessJWT, maxAge, "/", "", false, true)
-    c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Seconds()), "/", "", false, true)
+	c.SetCookie(J.CookieName, pair.AccessJWT, maxAge, "/", "", J.encryption, true)
+	c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Seconds()), "/", "", J.encryption, true)
 }
 
 func (J *JWTManager) ClearAuthCookies(c *gin.Context) {
-    c.SetCookie(J.CookieName, "", -1, "/", "", false, true)
-    c.SetCookie(J.RefreshCookieName, "", -1, "/", "", false, true)
+	c.SetCookie(J.CookieName, "", -1, "/", "", J.encryption, true)
+	c.SetCookie(J.RefreshCookieName, "", -1, "/", "", J.encryption, true)
 }
 
 func (J *JWTManager) GetAuthCookie(c *gin.Context) string {
-    cookie, _ := c.Cookie(J.CookieName)
-    return cookie
+	cookie, _ := c.Cookie(J.CookieName)
+	return cookie
 }
 
 func (J *JWTManager) GetRefreshCookie(c *gin.Context) string {
-    cookie, _ := c.Cookie(J.RefreshCookieName)
-    return cookie
+	cookie, _ := c.Cookie(J.RefreshCookieName)
+	return cookie
 }
