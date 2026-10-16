@@ -22,7 +22,7 @@ func Authentication(jwtManager *authentication.JWTManager) gin.HandlerFunc {
 			return
 		}
 
-		claims, err := jwtManager.ValidateJWT(parts[1])
+		claims, err := jwtManager.ValidateJWT(parts[1], "access")
 		if err != nil {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
@@ -35,6 +35,7 @@ func Authentication(jwtManager *authentication.JWTManager) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := ""
@@ -47,19 +48,20 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 			}
 		}
 		if token == "" {
-			c.Status(http.StatusUnauthorized)
-			c.Abort()
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		claims, err := jwtManager.ValidateJWT(token)
-		if err != nil || claims.TokenType != "access" {
-			c.Status(http.StatusUnauthorized)
-			c.Abort()
+
+		claims, err := jwtManager.ValidateJWT(token, "access")
+		if err != nil {
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
 		c.Set("claims", claims)
 		c.Set("uuid", claims.Uuid)
 		c.Set("username", claims.Username)
+		c.Set("token_type", claims.TokenType)
 		c.Next()
 	}
 }
