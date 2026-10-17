@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/IzomSoftware/GinWrapper/authentication"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -62,6 +64,33 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 		c.Set("uuid", claims.Uuid)
 		c.Set("username", claims.Username)
 		c.Set("token_type", claims.TokenType)
+		c.Next()
+	}
+}
+
+func CRSFCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		switch c.Request.Method {
+		case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
+		default:
+			c.Next()
+			return
+		}
+
+		origin := c.GetHeader("Origin")
+		if origin == "" {
+			if ref := c.GetHeader("Referer"); ref != "" {
+				origin = ref
+			} else {
+				c.Next()
+				return
+			}
+		}
+
+		if user, err := url.Parse(origin); err != nil || user.Host != c.Request.Host {
+			response.AbortForbidden(c)
+			return
+		}
 		c.Next()
 	}
 }
