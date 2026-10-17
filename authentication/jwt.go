@@ -48,7 +48,7 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(encryption bool, sameSite bool, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(encryption bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
 		encryption:         encryption,
 		sameSite:           sameSite,

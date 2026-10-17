@@ -87,7 +87,7 @@ func CSRFCheck() gin.HandlerFunc {
 			}
 		}
 
-		if url, err := url.Parse(origin); err != nil || url.Host != c.Request.Host {
+		if link, err := url.Parse(origin); err != nil || link.Host != c.Request.Host {
 			response.AbortForbidden(c)
 			return
 		}
