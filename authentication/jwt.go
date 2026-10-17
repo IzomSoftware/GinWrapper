@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,8 @@ type JWTClaims struct {
 
 type JWTManager struct {
 	encryption         bool
+	sameSite           bool
+	secureCookies      bool
 	secret             string
 	issuer             string
 	CookieName         string
@@ -45,9 +48,11 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(encryption bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(encryption bool, sameSite bool, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
-		encryption: encryption,
+		encryption:         encryption,
+		sameSite:           sameSite,
+		secureCookies:      secureCookies,
 		secret:             secret,
 		issuer:             issuer,
 		CookieName:         cookieName,
@@ -134,14 +139,33 @@ func (J *JWTManager) RefreshToken(refreshStr string) (*JWTPair, error) {
 
 	return J.GenerateJWTPair(claims.Uuid, claims.Username)
 }
+
+func (J *JWTManager) SetCookie(c *gin.Context, name string, value string, maxAge int) {
+	var sameSite http.SameSite
+	if J.sameSite {
+		sameSite = http.SameSiteStrictMode
+	} else {
+		sameSite = http.SameSiteNoneMode
+	}
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name: name,
+		Value: value,
+		Path: "/",
+		MaxAge: maxAge,
+		Secure: J.secureCookies,
+		HttpOnly: J.encryption,
+		SameSite: sameSite,
+	})
+}
+
 func (J *JWTManager) SetAuthCookies(c *gin.Context, pair *JWTPair, maxAge int) {
-	c.SetCookie(J.CookieName, pair.AccessJWT, maxAge, "/", "", J.encryption, true)
-	c.SetCookie(J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Seconds()), "/", "", J.encryption, true)
+	J.SetCookie(c, J.CookieName, pair.AccessJWT, maxAge)
+	J.SetCookie(c, J.RefreshCookieName, pair.RefreshJWT, int(J.refreshTokenExpiry.Seconds()))
 }
 
 func (J *JWTManager) ClearAuthCookies(c *gin.Context) {
-	c.SetCookie(J.CookieName, "", -1, "/", "", J.encryption, true)
-	c.SetCookie(J.RefreshCookieName, "", -1, "/", "", J.encryption, true)
+	J.SetCookie(c, J.CookieName, "", -1)
+	J.SetCookie(c, J.RefreshCookieName, "", -1)
 }
 
 func (J *JWTManager) GetAuthCookie(c *gin.Context) string {
