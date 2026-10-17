@@ -68,7 +68,7 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 	}
 }
 
-func CRSFCheck() gin.HandlerFunc {
+func CSRFCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.Method {
 		case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
