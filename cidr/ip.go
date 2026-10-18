@@ -1,8 +1,6 @@
 package cidr
 
 import (
-	"log/slog"
-
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/gin-gonic/gin"
 )
