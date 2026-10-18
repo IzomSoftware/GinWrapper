@@ -39,7 +39,7 @@ func Authentication(jwtManager *authentication.JWTManager) gin.HandlerFunc {
 	}
 }
 
-func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.HandlerFunc {
+func AuthenticationWithCookie(jwtManager *authentication.JWTManager, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := ""
 		if authHeader := c.GetHeader("Authorization"); len(authHeader) > 7 && strings.EqualFold(authHeader[:7], "Bearer ") {
@@ -51,13 +51,13 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 			}
 		}
 		if token == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.AbortUnauthorized(c, config)
 			return
 		}
 
 		claims, err := jwtManager.ValidateJWT(token, "access")
 		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.AbortUnauthorized(c, config)
 			return
 		}
 
