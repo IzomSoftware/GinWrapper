@@ -16,6 +16,6 @@ func GetIP(c *gin.Context, config configuration.ReverseProxyMode) string {
 	} else {
 		ip = c.Request.RemoteAddr
 	}
-	slog.Info("x-real-ip", c.GetHeader("X-Real-IP"), "clientIP", c.ClientIP(), "RemoteAddr", c.Request.RemoteAddr)
+	slog.Info("ip", "ip", ip)
 	return ip
 }
