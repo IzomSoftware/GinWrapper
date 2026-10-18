@@ -16,6 +16,5 @@ func GetIP(c *gin.Context, config configuration.ReverseProxyMode) string {
 	} else {
 		ip = c.Request.RemoteAddr
 	}
-	slog.Info("ip", "ip", ip)
 	return ip
 }
