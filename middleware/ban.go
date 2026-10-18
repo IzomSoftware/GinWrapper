@@ -5,14 +5,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/IzomSoftware/GinWrapper/cidr"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
 
-func BanCheck(redis *redis.Storage) gin.HandlerFunc {
+func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := cidr.GetIP(c, config)
 		banned, err := redis.Exists(fmt.Sprintf("ban:%s", ip))
 
 		if err != nil {

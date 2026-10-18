@@ -23,6 +23,11 @@ type HTTPServer struct {
 	TlsConfiguration TlsConfiguration `toml:"tls_configuration"`
 }
 
+type ReverseProxyMode struct {
+	Enabled bool     `toml:"enabled"`
+	IPList  []string `toml:"ip_list"`
+}
+
 type SQLiteConfiguration struct {
 	Enabled          bool   `toml:"enabled"`
 	DatabaseLocation string `toml:"database_location"`
@@ -125,6 +130,7 @@ type Protections struct {
 type Config struct {
 	Debug                 bool                  `toml:"debug"`
 	HTTPServer            HTTPServer            `toml:"http_server"`
+	ReverseProxyMode      ReverseProxyMode      `toml:"reverse_proxy_mode"`
 	DatabaseConfiguration DatabaseConfiguration `toml:"database"`
 	Protections           Protections           `toml:"protections"`
 }
@@ -142,6 +148,13 @@ var Default = Config{
 			CertFile: "cert.pem",
 			KeyFile:  "key.pem",
 		},
+	},
+	ReverseProxyMode: ReverseProxyMode{
+		Enabled: false,
+		IPList: []string{"127.0.0.1",
+			"::1",
+			"127.0.0.0/8",
+			"::"},
 	},
 	DatabaseConfiguration: DatabaseConfiguration{
 		SQLiteConfiguration: SQLiteConfiguration{

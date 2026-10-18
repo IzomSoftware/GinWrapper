@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/IzomSoftware/GinWrapper/authentication"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/gin-gonic/gin"
 )
@@ -68,7 +69,7 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager) gin.Handler
 	}
 }
 
-func CSRFCheck() gin.HandlerFunc {
+func CSRFCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.Method {
 		case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
@@ -88,7 +89,7 @@ func CSRFCheck() gin.HandlerFunc {
 		}
 
 		if link, err := url.Parse(origin); err != nil || link.Host != c.Request.Host {
-			response.AbortForbidden(c)
+			response.AbortForbidden(c, config)
 			return
 		}
 		c.Next()

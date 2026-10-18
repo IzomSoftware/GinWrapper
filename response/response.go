@@ -4,35 +4,37 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/IzomSoftware/GinWrapper/cidr"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/gin-gonic/gin"
 )
 
-func Abort(c *gin.Context, status int) {
+func Abort(c *gin.Context, status int, config configuration.ReverseProxyMode) {
 	c.AbortWithStatus(status)
-	logger.Info("aborted", "ip", c.ClientIP(), "status", status)
+	logger.Info("aborted", "ip", cidr.GetIP(c, config), "status", status)
 }
 
-func AbortForbidden(c *gin.Context) {
-	Abort(c, http.StatusForbidden)
+func AbortForbidden(c *gin.Context, config configuration.ReverseProxyMode) {
+	Abort(c, http.StatusForbidden, config)
 }
 
-func AbortUnauthorized(c *gin.Context) {
-	Abort(c, http.StatusUnauthorized)
+func AbortUnauthorized(c *gin.Context, config configuration.ReverseProxyMode) {
+	Abort(c, http.StatusUnauthorized, config)
 }
 
-func AbortInternalError(c *gin.Context) {
-	Abort(c, http.StatusInternalServerError)
+func AbortInternalError(c *gin.Context, config configuration.ReverseProxyMode) {
+	Abort(c, http.StatusInternalServerError, config)
 }
 
 func NoRoute(c *gin.Context) {
 	c.String(http.StatusNotFound, "404 Not Found")
 }
 
-func NoRouteWithProtection(registeredPaths []string, aggressive bool, ban func(string)) gin.HandlerFunc {
+func NoRouteWithProtection(registeredPaths []string, aggressive bool, ban func(string), config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
-		ip := c.ClientIP()
+		ip := cidr.GetIP(c, config)
 		parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 
 		if parts[0] != "" {
@@ -40,7 +42,7 @@ func NoRouteWithProtection(registeredPaths []string, aggressive bool, ban func(s
 
 			for _, registered := range registeredPaths {
 				if strings.HasPrefix(registered, base) {
-					AbortForbidden(c)
+					AbortForbidden(c, config)
 
 					if aggressive && ban != nil {
 						ban(ip)

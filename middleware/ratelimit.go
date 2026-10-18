@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
@@ -36,12 +37,12 @@ var script = redis.Script(`
     return 0
 `)
 
-func RateLimit(redis *redis.Storage, configuration configuration.RateLimitProtection) gin.HandlerFunc {
+func RateLimit(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
+		ip := cidr.GetIP(c, reverseProxyConfig)
 		now := time.Now().UnixMilli()
 
-		result, err := redis.RunScript(script, []string{ip}, configuration.Rate, configuration.Window*1000, now).Int64()
+		result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
 
 		if err != nil {
 			c.Next()

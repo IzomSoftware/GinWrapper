@@ -3,6 +3,8 @@ package logger
 import (
 	"log/slog"
 
+	"github.com/IzomSoftware/GinWrapper/cidr"
+	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +21,7 @@ func Warn(msg string, args ...any) {
 func Error(msg string, args ...any) {
 	slog.Error(msg, args...)
 }
-func LogConnection(connection *gin.Context) {
-	Info("connection", "ip", connection.ClientIP(), "path", connection.Request.URL.Path)
+func LogConnection(c *gin.Context, config configuration.ReverseProxyMode) {
+	
+	Info("connection", "ip", cidr.GetIP(c, config), "path", c.Request.URL.Path)
 }
