@@ -15,6 +15,7 @@ type StorageImplementation interface {
 
 type Storage struct {
 	client *redis.Client
+	impl   StorageImplementation
 	ctx    context.Context
 }
 
@@ -27,6 +28,10 @@ func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl Storag
 		client: redis.NewClient(opts),
 		ctx:    ctx,
 	}, nil
+}
+
+func (S *Storage) Close() error {
+	return S.impl.Close(S.client)
 }
 
 func (S *Storage) Set(key string, value any, expiration time.Duration) error {
