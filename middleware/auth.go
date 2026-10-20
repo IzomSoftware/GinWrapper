@@ -11,23 +11,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Authentication(jwtManager *authentication.JWTManager) gin.HandlerFunc {
+func Authentication(jwtManager *authentication.JWTManager, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if header == "" {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.AbortUnauthorized(c, config)
 			return
 		}
 
 		parts := strings.SplitN(header, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.AbortUnauthorized(c, config)
 			return
 		}
 
 		claims, err := jwtManager.ValidateJWT(parts[1], "access")
 		if err != nil {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			response.AbortUnauthorized(c, config)
 			return
 		}
 

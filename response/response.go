@@ -2,6 +2,7 @@ package response
 
 import (
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
@@ -33,10 +34,19 @@ func NoRoute(c *gin.Context) {
 
 func NoRouteWithProtection(registeredPaths []string, aggressive bool, ban func(string), config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
+		uriPath := c.Request.URL.Path
+		cleanedUriPath := path.Clean(uriPath)
 		ip := cidr.GetIP(c, config)
-		parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 
+		if cleanedUriPath != uriPath {
+			AbortForbidden(c, config)
+			if aggressive && ban != nil {
+				ban(ip)
+			}
+			return
+		}
+
+		parts := strings.Split(strings.TrimPrefix(cleanedUriPath, "/"), "/")
 		if parts[0] != "" {
 			base := "/" + parts[0]
 
