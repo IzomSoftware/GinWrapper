@@ -13,7 +13,6 @@ type StorageImplementation interface {
 
 type Storage struct {
 	pool           *sql.DB
-    impl   StorageImplementation
 	CreationSchema string
 }
 
