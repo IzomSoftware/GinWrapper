@@ -68,6 +68,7 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 			response.AbortUnauthorized(c, config)
 			return
 		}
+		S.jwtManager.SetAuthCookies(c, pair, S.configuration.Protections.JWTProtection.JWTExpiration)
 		c.JSON(http.StatusOK, pair)
 	})
 	S.Engine.POST("/api/auth/logout", func(c *gin.Context) {

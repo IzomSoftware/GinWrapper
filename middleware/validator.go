@@ -16,5 +16,6 @@ func ValidatePost(config configuration.ReverseProxyMode, fields...string) gin.Ha
 				return
 			}
 		}
+		c.Next()
 	}
 }

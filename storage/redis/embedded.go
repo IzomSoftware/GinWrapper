@@ -20,3 +20,8 @@ func (E *EmbeddedRedisStorage) GetRedisOpts(config *configuration.RedisConfigura
 		Addr: miniRedis.Addr(),
 	}, nil
 }
+
+func (E *EmbeddedRedisStorage) Close(client *redis.Client) {
+	E.MiniRedis.Close()
+	client.Close()
+}

@@ -34,3 +34,7 @@ func (D *DedicatedRedisStorage) GetRedisOpts(config *configuration.RedisConfigur
 	}
 	return redisOpts, nil
 }
+
+func (E *DedicatedRedisStorage) Close(client *redis.Client) {
+	client.Close()
+}
