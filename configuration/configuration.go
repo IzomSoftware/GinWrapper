@@ -24,8 +24,10 @@ type HTTPServer struct {
 }
 
 type ReverseProxyMode struct {
-	Enabled bool     `toml:"enabled"`
-	IPList  []string `toml:"ip_list"`
+	Enabled              bool     `toml:"enabled"`
+	ReadHeaderExplicitly bool     `toml:"read_header_explicitly"`
+	ExplicitReadHeader   string   `toml:"explicit_read_header"`
+	IPList               []string `toml:"ip_list"`
 }
 
 type SQLiteConfiguration struct {
