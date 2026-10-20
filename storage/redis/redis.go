@@ -31,8 +31,8 @@ func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl Storag
 	}, nil
 }
 
-func (S *Storage) Close() error {
-	return S.impl.Close(S.client)
+func (S *Storage) Close() {
+	S.impl.Close(S.client)
 }
 
 func (S *Storage) Set(key string, value any, expiration time.Duration) error {

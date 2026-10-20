@@ -97,9 +97,7 @@ func (storage *Storage) Close() error {
 		}
 	}
 	if storage.Redis != nil {
-		if err := storage.Redis.Close(); err != nil {
-			return err
-		}
+		storage.Redis.Close()
 	}
 	return nil
 }
