@@ -19,7 +19,7 @@ func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.H
 
 		if err != nil {
 			logger.Error("ban check failed for ip", ip, "err", err)
-			c.Next()
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 
