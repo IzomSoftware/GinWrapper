@@ -82,9 +82,6 @@ func CSRFCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 		if origin == "" {
 			if ref := c.GetHeader("Referer"); ref != "" {
 				origin = ref
-			} else {
-				c.Next()
-				return
 			}
 		}
 

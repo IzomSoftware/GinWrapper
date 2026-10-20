@@ -153,6 +153,8 @@ var Default = Config{
 	},
 	ReverseProxyMode: ReverseProxyMode{
 		Enabled: false,
+		ReadHeaderExplicitly: false,
+		ExplicitReadHeader: "X-Real-IP",
 		IPList: []string{"127.0.0.1",
 			"::1",
 			"127.0.0.0/8",

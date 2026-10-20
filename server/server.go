@@ -59,7 +59,7 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 			return
 		}
 		S.jwtManager.SetAuthCookies(c, pair, S.configuration.Protections.JWTProtection.JWTExpiration)
-		c.JSON(http.StatusOK, pair)
+		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 	S.Engine.POST("/api/auth/refresh", func(c *gin.Context) {
 		refreshToken := c.PostForm("refresh_token")
@@ -69,7 +69,7 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 			return
 		}
 		S.jwtManager.SetAuthCookies(c, pair, S.configuration.Protections.JWTProtection.JWTExpiration)
-		c.JSON(http.StatusOK, pair)
+		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 	S.Engine.POST("/api/auth/logout", func(c *gin.Context) {
 		S.jwtManager.ClearAuthCookies(c)
