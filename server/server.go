@@ -128,7 +128,7 @@ func (S *Server) ListenAndServe() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	if S.configuration.ReverseProxyMode.Enabled {
+	if S.configuration.ReverseProxyMode.Enabled && !S.configuration.ReverseProxyMode.ReadHeaderExplicitly{
 		var trustedProxies []string
 		for _, ip := range S.configuration.ReverseProxyMode.IPList {
 			trustedProxies = append(trustedProxies, ip)
