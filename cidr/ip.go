@@ -7,10 +7,8 @@ import (
 
 func GetIP(c *gin.Context, config configuration.ReverseProxyMode) string {
 	var ip string
-	if config.Enabled {
-		if ip = c.GetHeader("X-Real-IP"); ip == "" {
-			ip = c.ClientIP()
-		}
+	if config.IPList != nil && config.Enabled {
+		ip = c.ClientIP()
 	} else {
 		ip = c.Request.RemoteAddr
 	}
