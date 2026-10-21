@@ -123,6 +123,7 @@ type OrderingProtection struct {
 }
 
 type Protections struct {
+	Ban                 bool                `toml:"ban"`
 	APIUserAgent        string              `toml:"api_user_agent_protection"`
 	RateLimitProtection RateLimitProtection `toml:"rate_limit_protection"`
 	JWTProtection       JWTProtection       `toml:"jwt_protection"`
@@ -152,9 +153,9 @@ var Default = Config{
 		},
 	},
 	ReverseProxyMode: ReverseProxyMode{
-		Enabled: false,
+		Enabled:              false,
 		ReadHeaderExplicitly: false,
-		ExplicitReadHeader: "X-Real-IP",
+		ExplicitReadHeader:   "X-Real-IP",
 		IPList: []string{"127.0.0.1",
 			"::1",
 			"127.0.0.0/8",

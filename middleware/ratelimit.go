@@ -37,7 +37,7 @@ var script = redis.Script(`
     return 0
 `)
 
-func RateLimit(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
+func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ip := cidr.GetIP(c, reverseProxyConfig)
 		now := time.Now().UnixMilli()

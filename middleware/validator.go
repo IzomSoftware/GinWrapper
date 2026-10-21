@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ValidatePost(config configuration.ReverseProxyMode, fields...string) gin.HandlerFunc {
+func POSTFormCheck(config configuration.ReverseProxyMode, fields...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		for _, field := range(fields) {
 			if c.PostForm(field) == "" {

@@ -8,9 +8,18 @@ import (
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
+
+func BanOnFail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.IsAborted() {
+			
+		}
+	}
+}
 
 func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -34,4 +43,14 @@ func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.H
 
 func BanIP(redis *redis.Storage, ip string, time time.Duration) error {
 	return redis.Set(fmt.Sprintf("ban:%s", ip), "1", time)
+}
+
+func Punish(c *gin.Context, protectionConfig configuration.Protections, reverseProxyConfig configuration.ReverseProxyMode, redis *redis.Storage, ip string, time time.Duration) error {
+	if protectionConfig.Ban {
+		return BanIP(redis, ip, time)
+	} else {
+		response.AbortForbidden(c, reverseProxyConfig)
+	}
+	return nil
+
 }

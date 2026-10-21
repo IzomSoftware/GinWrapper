@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserAgent(useragent string) gin.HandlerFunc {
+func UserAgentCheck(useragent string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if useragent == "" {
 			c.Next()
