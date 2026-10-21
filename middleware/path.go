@@ -24,7 +24,7 @@ func CleanCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 	}
 }
 
-func ProbingCheck(redis *redis.Storage, threshold int64, window time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+func ProbingCheck(redis *redis.Storage, threshold int64, window time.Duration, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
@@ -44,7 +44,7 @@ func ProbingCheck(redis *redis.Storage, threshold int64, window time.Duration, c
 		if i == 1 {
 			redis.Expire(key, window)
 		} else if i >= threshold {
-			BanIP(redis, ip, 24*time.Hour)
+			BanIP(redis, ip, banDuration)
 		}
 	}
 }
