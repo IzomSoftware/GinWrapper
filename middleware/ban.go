@@ -34,7 +34,7 @@ func BanIP(redis *redis.Storage, ip string, duration time.Duration) error {
 }
 
 func Ban(c *gin.Context, redis *redis.Storage, duration time.Duration, config configuration.ReverseProxyMode) {
-	if duration != 0 || redis != nil {
+	if duration != 0 && redis != nil {
 		BanIP(redis, cidr.GetIP(c, config), duration)
 	}
 }

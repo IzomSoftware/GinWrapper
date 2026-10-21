@@ -29,7 +29,7 @@ type JWTClaims struct {
 }
 
 type JWTManager struct {
-	httpOnly         bool
+	httpOnly           bool
 	secureCookies      bool
 	secret             string
 	issuer             string
@@ -50,7 +50,7 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 
 func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
-		httpOnly:         httpOnly,
+		httpOnly:           httpOnly,
 		sameSite:           sameSite,
 		secureCookies:      secureCookies,
 		secret:             secret,

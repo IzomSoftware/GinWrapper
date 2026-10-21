@@ -8,9 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserAgentCheck(userAgentConfig configuration.Protections, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
+func UserAgentCheck(useragent string, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		useragent := userAgentConfig.APIUserAgent
 		if useragent == "" {
 			c.Next()
 			return

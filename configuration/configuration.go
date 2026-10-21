@@ -124,6 +124,7 @@ type OrderingProtection struct {
 
 type Protections struct {
 	APIUserAgent        string              `toml:"api_user_agent_protection"`
+	AllowedOrigins      []string            `toml:"allowed_origins"`
 	RateLimitProtection RateLimitProtection `toml:"rate_limit_protection"`
 	JWTProtection       JWTProtection       `toml:"jwt_protection"`
 	OrderingProtection  OrderingProtection  `toml:"ordering_protection"`
@@ -214,6 +215,7 @@ var Default = Config{
 	},
 	Protections: Protections{
 		APIUserAgent: "",
+		AllowedOrigins: []string {},
 		RateLimitProtection: RateLimitProtection{
 			Enabled: true,
 			Rate:    30,

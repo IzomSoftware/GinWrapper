@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -47,8 +46,10 @@ func Authentication(jwtManager *authentication.JWTManager, redis *redis.Storage,
 func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redis.Storage, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := ""
-		if authHeader := c.GetHeader("Authorization"); len(authHeader) > 7 && strings.EqualFold(authHeader[:7], "Bearer ") {
-			token = strings.TrimSpace(authHeader[7:])
+		if authHeader := c.GetHeader("Authorization"); authHeader != "" {
+			if scheme, rest, ok := strings.Cut(authHeader, " "); ok && strings.EqualFold(scheme, "Bearer") {
+				token = strings.TrimSpace(rest)
+			}
 		}
 		if token == "" {
 			if cookie, err := c.Cookie(jwtManager.CookieName); err == nil && cookie != "" {
@@ -76,7 +77,7 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redi
 	}
 }
 
-func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configuration.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Request.Method {
 		case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
@@ -84,17 +85,21 @@ func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configura
 			c.Next()
 			return
 		}
-
 		origin := c.GetHeader("Origin")
 		if origin == "" {
-			if ref := c.GetHeader("Referer"); ref != "" {
-				origin = ref
+			origin = c.GetHeader("Referer")
+		}
+		allowed := false
+		for _, a := range config.Protections.AllowedOrigins {
+			if origin == a {
+				allowed = true
+				break
 			}
 		}
-
-		if link, err := url.Parse(origin); err != nil || link.Host != c.Request.Host {
-			response.AbortForbidden(c, config)
-			Ban(c, redis, banDuration, config)
+		if !allowed {
+			reverseProxyMode := config.ReverseProxyMode
+			response.AbortForbidden(c, reverseProxyMode)
+			Ban(c, redis, banDuration, reverseProxyMode)
 			return
 		}
 		c.Next()

@@ -15,7 +15,7 @@ type MYSQLStorage struct{}
 func (M *MYSQLStorage) GetDBPool(config *configuration.SQLConfiguration) (*sql.DB, error) {
 	mysqlConfig := config.MySQLConfiguration
 	dataSourceName := fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&tls=%s",
+		 "%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&tls=%s&multiStatements=true",
 		mysqlConfig.Username,
 		mysqlConfig.Password,
 		mysqlConfig.Hostname,

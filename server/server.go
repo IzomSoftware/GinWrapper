@@ -67,7 +67,7 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 			response.AbortUnauthorized(c, config)
 			return
 		}
-		pair, err := S.jwtManager.GenerateJWTPair(key, key)
+		pair, err := S.jwtManager.GenerateJWTPair(authentication.GenerateUUID(), key)
 		if err != nil {
 			response.AbortInternalError(c, config)
 			return
@@ -76,7 +76,10 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 	S.Engine.POST("/api/auth/refresh", func(c *gin.Context) {
-		refreshToken := c.PostForm("refresh_token")
+		refreshToken := S.jwtManager.GetRefreshCookie(c)
+		if refreshToken == "" {
+			refreshToken = c.PostForm("refresh_token")
+		}
 		pair, err := S.jwtManager.RefreshToken(refreshToken)
 		if err != nil {
 			response.AbortUnauthorized(c, config)
