@@ -16,10 +16,9 @@ type StorageImplementation interface {
 type Storage struct {
 	client *redis.Client
 	impl   StorageImplementation
-	ctx    context.Context
 }
 
-func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl StorageImplementation) (*Storage, error) {
+func New(cfg *configuration.RedisConfiguration, impl StorageImplementation) (*Storage, error) {
 	opts, err := impl.GetRedisOpts(cfg)
 	if err != nil {
 		return nil, err
@@ -31,7 +30,6 @@ func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl Storag
 	return &Storage{
 		client: redis.NewClient(opts),
 		impl:   impl,
-		ctx:    ctx,
 	}, nil
 }
 
