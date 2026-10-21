@@ -22,11 +22,12 @@ type Server struct {
 }
 
 func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager) *Server {
-	engine := gin.New()
-	engine.Use(gin.Recovery())
 	if !configuration.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	engine := gin.New()
+	engine.Use(gin.Recovery())
 
 	if configuration.ReverseProxyMode.Enabled && !configuration.ReverseProxyMode.ReadHeaderExplicitly {
 		var trustedProxies []string
