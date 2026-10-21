@@ -55,13 +55,22 @@ func ProbingCheck(redis *redis.Storage, threshold int64, window, banDuration tim
 	}
 }
 
-func IncompleteRouteCheck(registeredPaths []string, config configuration.ReverseProxyMode) gin.HandlerFunc {
+func RegisteredPaths(engine *gin.Engine) []string {
+    routes := engine.Routes()
+    result := make([]string, 0, len(routes))
+    for _, r := range routes {
+        result = append(result, r.Path)
+    }
+    return result
+}
+
+func IncompleteRouteCheck(engine *gin.Engine, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		parts := strings.Split(strings.TrimPrefix(c.Request.URL.Path, "/"), "/")
 		if parts[0] != "" {
 			base := "/" + parts[0]
-			for _, registered := range registeredPaths {
-				if strings.HasPrefix(registered, base) {
+			for _, registered := range RegisteredPaths(engine) {
+				if strings.HasPrefix(strings.ToLower(registered), strings.ToLower(base)) {
 					response.AbortForbidden(c, config)
 					return
 				}
