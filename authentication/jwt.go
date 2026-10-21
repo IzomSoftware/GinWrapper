@@ -14,6 +14,11 @@ import (
 var ErrInvalidToken = fmt.Errorf("Invalid token")
 var ErrInvalidSigning = fmt.Errorf("Invalid signing method")
 var ErrInvalidTokenType = fmt.Errorf("Invalid token type")
+var ErrRevoked = fmt.Errorf("Token has been revoked")
+
+type RevokedChecker interface {
+	Revoked(jti string) bool
+}
 
 type JWTPair struct {
 	AccessJWT  string    `json:"access_jwt"`
@@ -33,12 +38,14 @@ type JWTManager struct {
 	httpOnly           bool
 	secureCookies      bool
 	secret             string
+	domain             string
 	issuer             string
 	CookieName         string
 	RefreshCookieName  string
 	accessTokenExpiry  time.Duration
 	refreshTokenExpiry time.Duration
 	sameSite           http.SameSite
+	revoked            RevokedChecker
 }
 
 func GenerateRandomSecret(byteLen int) (string, error) {
@@ -50,6 +57,10 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 }
 
 func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+	secretBytes, err := hex.DecodeString(secret)
+	if err != nil || len(secretBytes) == 0 {
+		secretBytes = []byte(secret)
+	}
 	return &JWTManager{
 		httpOnly:           httpOnly,
 		sameSite:           sameSite,
@@ -131,6 +142,10 @@ func (J *JWTManager) ValidateJWT(jwtStr string, tokenType string) (*JWTClaims, e
 		return nil, ErrInvalidTokenType
 	}
 
+	if J.revoked != nil && claims.JTI != "" && J.revoked.Revoked(claims.JTI) {
+		return nil, ErrRevoked
+	}
+
 	return claims, nil
 }
 
@@ -148,6 +163,7 @@ func (J *JWTManager) SetCookie(c *gin.Context, name string, value string, maxAge
 		Name:     name,
 		Value:    value,
 		Path:     "/",
+		Domain:   J.domain,
 		MaxAge:   maxAge,
 		Secure:   J.secureCookies,
 		HttpOnly: J.httpOnly,
@@ -173,4 +189,8 @@ func (J *JWTManager) GetAuthCookie(c *gin.Context) string {
 func (J *JWTManager) GetRefreshCookie(c *gin.Context) string {
 	cookie, _ := c.Cookie(J.RefreshCookieName)
 	return cookie
+}
+
+func (J *JWTManager) RefreshTokenExpiry() time.Duration {
+	return J.refreshTokenExpiry
 }

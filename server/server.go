@@ -58,6 +58,10 @@ func (S *Server) RegisterRoutes(routes map[string]map[string]gin.HandlerFunc) {
 
 func (S *Server) RegisterAuthRoutes(identifier string, secret string, query string, config configuration.ReverseProxyMode) {
 	S.Engine.POST("/api/auth/login", func(c *gin.Context) {
+		if c.PostForm(identifier) == "" || c.PostForm(secret) == "" {
+			response.Abort(c, http.StatusBadRequest, config)
+			return
+		}
 		key, val := c.PostForm(identifier), c.PostForm(secret)
 		var hash string
 		err := S.storage.SQL.QueryRow(
@@ -89,12 +93,18 @@ func (S *Server) RegisterAuthRoutes(identifier string, secret string, query stri
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 	S.Engine.POST("/api/auth/logout", func(c *gin.Context) {
+		if claims, exists := c.Get("claims"); exists {
+			if jc, ok := claims.(*authentication.JWTClaims); ok && jc.JTI != "" && S.storage != nil && S.storage.Redis != nil {
+				_ = S.storage.Redis.Set("revoked:"+jc.JTI, "1", S.jwtManager.RefreshTokenExpiry())
+			}
+		}
 		S.jwtManager.ClearAuthCookies(c)
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
 }
 func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix string, uploadDir string, allowedExt map[string]struct{}, maxSize int64, config configuration.ReverseProxyMode, middlewares ...gin.HandlerFunc) {
 	handler := func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxSize)
 		uploadedFile, err := c.FormFile(field)
 		if err != nil {
 			response.Abort(c, http.StatusBadRequest, config)
@@ -124,7 +134,10 @@ func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix st
 			response.Abort(c, http.StatusUnsupportedMediaType, config)
 			return
 		}
-		_ = os.MkdirAll(uploadDir, 0755)
+		if err := os.MkdirAll(uploadDir, 0755); err != nil {
+			response.AbortInternalError(c, config)
+			return
+		}
 		fileName := authentication.GenerateUUID() + extension
 		if err := c.SaveUploadedFile(uploadedFile, fmt.Sprintf("%s/%s", uploadDir, fileName)); err != nil {
 			response.AbortInternalError(c, config)

@@ -64,8 +64,8 @@ func RegisteredPaths(engine *gin.Engine) []string {
 }
 
 func IncompleteRouteCheck(engine *gin.Engine, config configuration.ReverseProxyMode) gin.HandlerFunc {
+	paths := RegisteredPaths(engine)
 	return func(c *gin.Context) {
-		paths := RegisteredPaths(engine)
 		parts := strings.Split(strings.TrimPrefix(c.Request.URL.Path, "/"), "/")
 		if parts[0] != "" {
 			base := "/" + parts[0]

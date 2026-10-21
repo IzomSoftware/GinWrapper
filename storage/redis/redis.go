@@ -29,7 +29,7 @@ func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl Storag
 		return nil, err
 	}
 	return &Storage{
-		client: client,
+		client: redis.NewClient(opts),
 		impl:   impl,
 		ctx:    ctx,
 	}, nil
@@ -40,52 +40,52 @@ func (S *Storage) Close() {
 }
 
 func (S *Storage) Set(key string, value any, expiration time.Duration) error {
-	return S.client.Set(S.ctx, key, value, expiration).Err()
+	return S.client.Set(context.Background(), key, value, expiration).Err()
 }
 
 func (S *Storage) Get(key string) (string, error) {
-	return S.client.Get(S.ctx, key).Result()
+	return S.client.Get(context.Background(), key).Result()
 }
 
 func (S *Storage) HSet(key string, values map[string]any) error {
-	return S.client.HSet(S.ctx, key, values).Err()
+	return S.client.HSet(context.Background(), key, values).Err()
 }
 
 func (S *Storage) HUpdate(key string, field string, value any) error {
-	return S.client.HSet(S.ctx, key, field, value).Err()
+	return S.client.HSet(context.Background(), key, field, value).Err()
 }
 
 func (S *Storage) HGet(key string, field string) (string, error) {
-	return S.client.HGet(S.ctx, key, field).Result()
+	return S.client.HGet(context.Background(), key, field).Result()
 }
 
 func (S *Storage) HGetAll(key string) (map[string]string, error) {
-	return S.client.HGetAll(S.ctx, key).Result()
+	return S.client.HGetAll(context.Background(), key).Result()
 }
 
 func (S *Storage) Exists(key string) (bool, error) {
-	count, err := S.client.Exists(S.ctx, key).Result()
+	count, err := S.client.Exists(context.Background(), key).Result()
 	return count > 0, err
 }
 
 func (S *Storage) Del(keys ...string) error {
-	return S.client.Del(S.ctx, keys...).Err()
+	return S.client.Del(context.Background(), keys...).Err()
 }
 
 func (S *Storage) Incr(key string) (int64, error) {
-	return S.client.Incr(S.ctx, key).Result()
+	return S.client.Incr(context.Background(), key).Result()
 }
 
 func (S *Storage) Expire(key string, time time.Duration) error {
-	return S.client.Expire(S.ctx, key, time).Err()
+	return S.client.Expire(context.Background(), key, time).Err()
+}
+
+func (S *Storage) RunScript(script *redis.Script, keys []string, args ...any) *redis.Cmd {
+	return script.Run(context.Background(), S.client, keys, args)
 }
 
 func Script(script string) *redis.Script {
 	return redis.NewScript(script)
-}
-
-func (S *Storage) RunScript(script *redis.Script, keys []string, args ...any) *redis.Cmd {
-	return script.Run(S.ctx, S.client, keys, args)
 }
 
 func (S *Storage) Ping(ctx context.Context) error {

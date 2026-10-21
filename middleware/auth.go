@@ -114,3 +114,12 @@ func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configura
 		c.Next()
 	}
 }
+
+
+func IsRevoked(redis *redis.Storage, jti string) bool {
+    exists, err := redis.Exists("revoked:" + jti)
+    if err != nil {
+        return false
+    }
+    return exists
+}

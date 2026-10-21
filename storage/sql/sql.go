@@ -35,7 +35,9 @@ func (S *Storage) SetupTables() error {
 func (S *Storage) Ping() error {
 	return S.pool.Ping()
 }
-
+func (S *Storage) PingContext(ctx context.Context) error {
+	return S.pool.PingContext(ctx)
+}
 func (S *Storage) Close() error {
 	return S.pool.Close()
 }
@@ -60,6 +62,10 @@ func (S *Storage) QueryRow(query string, args ...any) *sql.Row {
 
 func (S *Storage) Query(query string, args ...any) (*sql.Rows, error) {
 	return S.pool.Query(query, args...)
+}
+
+func (S *Storage) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+	return S.pool.QueryContext(ctx, query, args...)
 }
 
 func (S *Storage) Transaction(ctx context.Context, fn func(*sql.Tx) error) error {
