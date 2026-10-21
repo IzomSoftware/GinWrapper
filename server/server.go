@@ -40,7 +40,7 @@ func NewServer(configuration *configuration.Config, storage *storage.Storage, jw
 		configuration: configuration,
 		storage:       storage,
 		jwtManager:    jwtManager,
-		Engine:        gin.New(),
+		Engine:        engine,
 	}
 }
 
