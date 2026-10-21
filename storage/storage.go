@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/IzomSoftware/GinWrapper/configuration"
@@ -18,15 +17,13 @@ var ErrNoStorageEnabled = fmt.Errorf("no storage backend enabled")
 
 func New(config *configuration.Config, creationSchema string) (*Storage, error) {
 	storage := &Storage{}
-	ctx := context.Background()
-
 	sql, err := initSQL(config, creationSchema)
 	if err != nil {
 		return nil, fmt.Errorf("sql init: %w", err)
 	}
 	storage.SQL = sql
 
-	redis, err := initRedis(config, ctx)
+	redis, err := initRedis(config)
 	if err != nil {
 		return nil, fmt.Errorf("redis init: %w", err)
 	}
@@ -71,7 +68,7 @@ func initSQL(config *configuration.Config, creationSchema string) (*sql.Storage,
 	return storage, nil
 }
 
-func initRedis(config *configuration.Config, ctx context.Context) (*redis.Storage, error) {
+func initRedis(config *configuration.Config) (*redis.Storage, error) {
 	databaseConfiguration := config.DatabaseConfiguration
 
 	if databaseConfiguration.DedicatedRedisConfiguration.Enabled {
