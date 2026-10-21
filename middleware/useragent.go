@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"net/http"
 	"strings"
 
+	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/gin-gonic/gin"
 )
 
-func UserAgentCheck(useragent string) gin.HandlerFunc {
+func UserAgentCheck(useragent string, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if useragent == "" {
 			c.Next()
@@ -17,7 +18,7 @@ func UserAgentCheck(useragent string) gin.HandlerFunc {
 		headerAgent := c.GetHeader("User-Agent")
 
 		if !strings.EqualFold(headerAgent, useragent) {
-			c.AbortWithStatus(http.StatusForbidden)
+			response.AbortForbidden(c, config)
 			return
 		}
 

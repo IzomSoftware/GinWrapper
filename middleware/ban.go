@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
@@ -18,11 +18,11 @@ func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.H
 		banned, err := redis.Exists(fmt.Sprintf("ban:%s", ip))
 		if err != nil {
 			logger.Error("ban check failed", "ip", ip, "err", err)
-			c.AbortWithStatus(http.StatusInternalServerError)
+			response.AbortInternalError(c, config)
 			return
 		}
 		if banned {
-			c.AbortWithStatus(http.StatusForbidden)
+			response.AbortForbidden(c, config)
 			return
 		}
 		c.Next()
