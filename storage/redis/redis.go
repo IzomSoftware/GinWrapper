@@ -26,7 +26,7 @@ func New(cfg *configuration.RedisConfiguration, ctx context.Context, impl Storag
 	}
 	return &Storage{
 		client: redis.NewClient(opts),
-		impl: impl,
+		impl:   impl,
 		ctx:    ctx,
 	}, nil
 }
@@ -85,5 +85,5 @@ func (S *Storage) RunScript(script *redis.Script, keys []string, args ...any) *r
 }
 
 func (S *Storage) Ping(ctx context.Context) error {
-    return S.client.Ping(ctx).Err()
+	return S.client.Ping(ctx).Err()
 }

@@ -39,22 +39,22 @@ var script = redis.Script(`
 `)
 
 func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, banDuration time.Duration, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        ip := cidr.GetIP(c, reverseProxyConfig)
-        now := time.Now().UnixMilli()
+	return func(c *gin.Context) {
+		ip := cidr.GetIP(c, reverseProxyConfig)
+		now := time.Now().UnixMilli()
 
-        result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
-        if err != nil {
-            c.Next()
-            return
-        }
+		result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
+		if err != nil {
+			c.Next()
+			return
+		}
 
-        if result == 1 {
-            response.Abort(c, http.StatusTooManyRequests, reverseProxyConfig)
-            Ban(c, redis, banDuration, reverseProxyConfig)
-            return
-        }
+		if result == 1 {
+			response.Abort(c, http.StatusTooManyRequests, reverseProxyConfig)
+			Ban(c, redis, banDuration, reverseProxyConfig)
+			return
+		}
 
-        c.Next()
-    }
+		c.Next()
+	}
 }

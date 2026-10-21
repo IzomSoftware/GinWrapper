@@ -96,7 +96,7 @@ func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix st
 		fileName := authentication.GenerateUUID() + extension
 		if err := c.SaveUploadedFile(uploadedFile, fmt.Sprintf("%s/%s", uploadDir, fileName)); err != nil {
 			response.AbortInternalError(c, config)
-            return
+			return
 		}
 		c.JSON(http.StatusOK, gin.H{"ok": true, "url": urlPrefix + "/" + fileName})
 	}
@@ -128,7 +128,7 @@ func (S *Server) ListenAndServe() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	if S.configuration.ReverseProxyMode.Enabled && !S.configuration.ReverseProxyMode.ReadHeaderExplicitly{
+	if S.configuration.ReverseProxyMode.Enabled && !S.configuration.ReverseProxyMode.ReadHeaderExplicitly {
 		var trustedProxies []string
 		for _, ip := range S.configuration.ReverseProxyMode.IPList {
 			trustedProxies = append(trustedProxies, ip)

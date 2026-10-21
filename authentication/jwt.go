@@ -142,11 +142,11 @@ func (J *JWTManager) RefreshToken(refreshStr string) (*JWTPair, error) {
 
 func (J *JWTManager) SetCookie(c *gin.Context, name string, value string, maxAge int) {
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name: name,
-		Value: value,
-		Path: "/",
-		MaxAge: maxAge,
-		Secure: J.secureCookies,
+		Name:     name,
+		Value:    value,
+		Path:     "/",
+		MaxAge:   maxAge,
+		Secure:   J.secureCookies,
 		HttpOnly: J.encryption,
 		SameSite: J.sameSite,
 	})

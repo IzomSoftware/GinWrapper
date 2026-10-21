@@ -8,9 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func POSTFormCheck(config configuration.ReverseProxyMode, fields...string) gin.HandlerFunc {
+func POSTFormCheck(config configuration.ReverseProxyMode, fields ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		for _, field := range(fields) {
+		for _, field := range fields {
 			if c.PostForm(field) == "" {
 				response.Abort(c, http.StatusBadRequest, config)
 				return

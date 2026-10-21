@@ -22,6 +22,6 @@ func Error(msg string, args ...any) {
 	slog.Error(msg, args...)
 }
 func LogConnection(c *gin.Context, config configuration.ReverseProxyMode) {
-	
+
 	Info("connection", "ip", cidr.GetIP(c, config), "path", c.Request.URL.Path)
 }
