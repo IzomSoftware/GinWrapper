@@ -29,7 +29,7 @@ type JWTClaims struct {
 }
 
 type JWTManager struct {
-	encryption         bool
+	httpOnly         bool
 	secureCookies      bool
 	secret             string
 	issuer             string
@@ -48,9 +48,9 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(encryption bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
-		encryption:         encryption,
+		httpOnly:         httpOnly,
 		sameSite:           sameSite,
 		secureCookies:      secureCookies,
 		secret:             secret,
@@ -147,7 +147,7 @@ func (J *JWTManager) SetCookie(c *gin.Context, name string, value string, maxAge
 		Path:     "/",
 		MaxAge:   maxAge,
 		Secure:   J.secureCookies,
-		HttpOnly: J.encryption,
+		HttpOnly: J.httpOnly,
 		SameSite: J.sameSite,
 	})
 }
