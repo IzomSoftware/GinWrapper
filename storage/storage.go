@@ -64,6 +64,9 @@ func initSQL(config *configuration.Config, creationSchema string) (*sql.Storage,
 	if err := storage.SetupTables(); err != nil {
 		return nil, err
 	}
+	if err := storage.Ping(); err != nil {
+		return nil, err
+	}
 
 	return storage, nil
 }

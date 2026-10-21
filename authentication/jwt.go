@@ -25,6 +25,7 @@ type JWTClaims struct {
 	Uuid      string `json:"uuid"`
 	Username  string `json:"username"`
 	TokenType string `json:"token_type"`
+	JTI       string `json:"jti"`
 	jwt.RegisteredClaims
 }
 
@@ -70,6 +71,7 @@ func (J *JWTManager) GenerateJWTPair(uuid string, username string) (*JWTPair, er
 		Uuid:      uuid,
 		Username:  username,
 		TokenType: "access",
+		JTI:       GenerateUUID(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(accessExpiry),

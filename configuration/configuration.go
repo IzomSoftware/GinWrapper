@@ -209,13 +209,13 @@ var Default = Config{
 			DialTimeout:         1,
 			ReadTimeout:         2,
 			WriteTimeoutSec:     3,
-			TLSEnabled:          true,
-			SkipTLSVerification: true,
+			TLSEnabled:          false,
+			SkipTLSVerification: false,
 		},
 	},
 	Protections: Protections{
-		APIUserAgent: "",
-		AllowedOrigins: []string {},
+		APIUserAgent:   "",
+		AllowedOrigins: []string{},
 		RateLimitProtection: RateLimitProtection{
 			Enabled: true,
 			Rate:    30,

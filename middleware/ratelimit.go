@@ -6,6 +6,7 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
@@ -45,6 +46,7 @@ func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimi
 
 		result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
 		if err != nil {
+			logger.Error("rate limit check failed", "ip", ip, "err", err)
 			c.Next()
 			return
 		}

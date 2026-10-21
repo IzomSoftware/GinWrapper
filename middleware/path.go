@@ -27,11 +27,6 @@ func CleanCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 
 func ProbingCheck(redis *redis.Storage, threshold int64, window, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if err := redis.Ping(c.Request.Context()); err != nil {
-			response.AbortInternalError(c, config)
-			return
-		}
-
 		c.Next()
 
 		status := c.Writer.Status()
@@ -56,12 +51,12 @@ func ProbingCheck(redis *redis.Storage, threshold int64, window, banDuration tim
 }
 
 func RegisteredPaths(engine *gin.Engine) []string {
-    routes := engine.Routes()
-    result := make([]string, 0, len(routes))
-    for _, r := range routes {
-        result = append(result, r.Path)
-    }
-    return result
+	routes := engine.Routes()
+	result := make([]string, 0, len(routes))
+	for _, r := range routes {
+		result = append(result, r.Path)
+	}
+	return result
 }
 
 func IncompleteRouteCheck(engine *gin.Engine, config configuration.ReverseProxyMode) gin.HandlerFunc {
