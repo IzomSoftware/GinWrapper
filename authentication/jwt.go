@@ -56,12 +56,13 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
+func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, domain string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
 	return &JWTManager{
 		httpOnly:           httpOnly,
 		sameSite:           sameSite,
 		secureCookies:      secureCookies,
 		secret:             secret,
+		domain:             domain,
 		issuer:             issuer,
 		CookieName:         cookieName,
 		RefreshCookieName:  refreshCookieName,
