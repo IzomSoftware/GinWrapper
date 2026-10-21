@@ -25,10 +25,11 @@ func New(cfg *configuration.RedisConfiguration, impl StorageImplementation) (*St
 	}
 	client := redis.NewClient(opts)
 	if err := client.Ping(context.Background()).Err(); err != nil {
+		client.Close()
 		return nil, err
 	}
 	return &Storage{
-		client: redis.NewClient(opts),
+		client: client,
 		impl:   impl,
 	}, nil
 }

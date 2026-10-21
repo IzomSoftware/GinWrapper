@@ -77,7 +77,6 @@ func initRedis(config *configuration.Config, ctx context.Context) (*redis.Storag
 	if databaseConfiguration.DedicatedRedisConfiguration.Enabled {
 		return redis.New(
 			&configuration.RedisConfiguration{DedicatedRedisConfiguration: databaseConfiguration.DedicatedRedisConfiguration},
-			ctx,
 			&redis.DedicatedRedisStorage{},
 		)
 	}
@@ -85,7 +84,6 @@ func initRedis(config *configuration.Config, ctx context.Context) (*redis.Storag
 	if databaseConfiguration.EmbeddedRedisConfiguration.Enabled {
 		return redis.New(
 			&configuration.RedisConfiguration{EmbeddedRedisConfiguration: databaseConfiguration.EmbeddedRedisConfiguration},
-			ctx,
 			&redis.EmbeddedRedisStorage{},
 		)
 	}

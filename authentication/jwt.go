@@ -57,10 +57,6 @@ func GenerateRandomSecret(byteLen int) (string, error) {
 }
 
 func NewJWTManager(httpOnly bool, sameSite http.SameSite, secureCookies bool, secret string, issuer string, cookieName string, refreshCookieName string, accessExpiry time.Duration, refreshExpiry time.Duration) *JWTManager {
-	secretBytes, err := hex.DecodeString(secret)
-	if err != nil || len(secretBytes) == 0 {
-		secretBytes = []byte(secret)
-	}
 	return &JWTManager{
 		httpOnly:           httpOnly,
 		sameSite:           sameSite,
