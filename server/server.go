@@ -106,6 +106,21 @@ func (S *Server) RegisterFileUploadRoute(field string, path string, urlPrefix st
 			response.Abort(c, http.StatusUnsupportedMediaType, config)
 			return
 		}
+		f, err := uploadedFile.Open()
+        if err != nil {
+            response.AbortInternalError(c, config)
+            return
+        }
+        mime, err := file.DetectMime(f)
+        f.Close()
+        if err != nil {
+            response.AbortInternalError(c, config)
+            return
+        }
+        if _, ok := allowedExt[mime]; !ok {
+            response.Abort(c, http.StatusUnsupportedMediaType, config)
+            return
+        }
 		_ = os.MkdirAll(uploadDir, 0755)
 		fileName := authentication.GenerateUUID() + extension
 		if err := c.SaveUploadedFile(uploadedFile, fmt.Sprintf("%s/%s", uploadDir, fileName)); err != nil {
