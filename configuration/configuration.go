@@ -123,7 +123,6 @@ type OrderingProtection struct {
 }
 
 type Protections struct {
-	Ban                 bool                `toml:"ban"`
 	APIUserAgent        string              `toml:"api_user_agent_protection"`
 	RateLimitProtection RateLimitProtection `toml:"rate_limit_protection"`
 	JWTProtection       JWTProtection       `toml:"jwt_protection"`
