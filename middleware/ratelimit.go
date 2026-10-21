@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var script = redis.Script(`
+var rateLimitScript = redis.Script(`
     local key = KEYS[1]
     local rate = tonumber(ARGV[1])
     local window = tonumber(ARGV[2])
@@ -44,7 +44,7 @@ func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimi
 		ip := cidr.GetIP(c, reverseProxyConfig)
 		now := time.Now().UnixMilli()
 
-		result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
+		result, err := redis.RunScript(rateLimitScript, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
 		if err != nil {
 			logger.Error("rate limit check failed", "ip", ip, "err", err)
 			c.Next()

@@ -89,7 +89,7 @@ func (J *JWTManager) GenerateJWTPair(uuid string, username string) (*JWTPair, er
 		Uuid:      uuid,
 		Username:  username,
 		TokenType: "refresh",
-		JTI: GenerateUUID(),
+		JTI:       GenerateUUID(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(currentTime),
 			ExpiresAt: jwt.NewNumericDate(currentTime.Add(J.refreshTokenExpiry)),

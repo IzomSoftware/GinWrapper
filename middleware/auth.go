@@ -38,7 +38,6 @@ func Authentication(jwtManager *authentication.JWTManager, redis *redis.Storage,
 		c.Set("claims", claims)
 		c.Set("uuid", claims.Uuid)
 		c.Set("username", claims.Username)
-		c.Set("token_type", claims.TokenType)
 		c.Next()
 	}
 }
@@ -72,7 +71,6 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redi
 		c.Set("claims", claims)
 		c.Set("uuid", claims.Uuid)
 		c.Set("username", claims.Username)
-		c.Set("token_type", claims.TokenType)
 		c.Next()
 	}
 }
@@ -85,12 +83,21 @@ func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configura
 			c.Next()
 			return
 		}
+
 		origin := c.GetHeader("Origin")
 		if origin == "" {
 			origin = c.GetHeader("Referer")
 		}
+
+		allowedOrigins := config.Protections.AllowedOrigins
+		if len(allowedOrigins) == 0 {
+			c.Next()
+			return
+		}
+
 		allowed := false
-		for _, a := range config.Protections.AllowedOrigins {
+
+		for _, a := range allowedOrigins {
 			if origin == a {
 				allowed = true
 				break
@@ -99,9 +106,11 @@ func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configura
 		if !allowed {
 			reverseProxyMode := config.ReverseProxyMode
 			response.AbortForbidden(c, reverseProxyMode)
+
 			Ban(c, redis, banDuration, reverseProxyMode)
 			return
 		}
+
 		c.Next()
 	}
 }

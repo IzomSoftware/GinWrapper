@@ -10,8 +10,8 @@ import (
 )
 
 func Abort(c *gin.Context, status int, config configuration.ReverseProxyMode) {
-	c.AbortWithStatus(status)
 	logger.Info("aborted", "ip", cidr.GetIP(c, config), "status", status)
+	c.AbortWithStatus(status)
 }
 
 func AbortForbidden(c *gin.Context, config configuration.ReverseProxyMode) {
