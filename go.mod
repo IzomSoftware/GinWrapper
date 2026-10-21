@@ -3,11 +3,11 @@ module github.com/IzomSoftware/GinWrapper
 go 1.24.0
 
 require (
-	github.com/BurntSushi/toml v1.5.0
-	github.com/alicebob/miniredis/v2 v2.36.1
-	github.com/gin-gonic/gin v1.10.1
+	github.com/BurntSushi/toml v1.6.0
+	github.com/alicebob/miniredis/v2 v2.40.0
+	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
-	github.com/redis/go-redis/v9 v9.18.0
+	github.com/redis/go-redis/v9 v9.23.0
 )
 
 require (
