@@ -37,6 +37,7 @@ func ProbingCheck(redis *redis.Storage, threshold int64, window time.Duration, c
 		key := "probe:" + ip
 		i, err := redis.Incr(key)
 		if err != nil {
+			response.AbortInternalError(c, config)
 			return
 		}
 
