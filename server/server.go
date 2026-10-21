@@ -22,6 +22,20 @@ type Server struct {
 }
 
 func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager) *Server {
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	if !configuration.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	if configuration.ReverseProxyMode.Enabled && !configuration.ReverseProxyMode.ReadHeaderExplicitly {
+		var trustedProxies []string
+		for _, ip := range configuration.ReverseProxyMode.IPList {
+			trustedProxies = append(trustedProxies, ip)
+		}
+		engine.SetTrustedProxies(trustedProxies)
+	}
+
 	return &Server{
 		configuration: configuration,
 		storage:       storage,
@@ -122,20 +136,6 @@ func (S *Server) ListenAndServe() error {
 	httpServerConfiguration := S.configuration.HTTPServer
 	if !httpServerConfiguration.Enabled {
 		return nil
-	}
-
-	if !S.configuration.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	S.Engine.Use(gin.Recovery())
-
-	if S.configuration.ReverseProxyMode.Enabled && !S.configuration.ReverseProxyMode.ReadHeaderExplicitly {
-		var trustedProxies []string
-		for _, ip := range S.configuration.ReverseProxyMode.IPList {
-			trustedProxies = append(trustedProxies, ip)
-		}
-		S.Engine.SetTrustedProxies(trustedProxies)
 	}
 
 	addr := fmt.Sprintf("%s:%d", httpServerConfiguration.Address, httpServerConfiguration.Port)
