@@ -13,22 +13,28 @@ import (
 )
 
 func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        ip := cidr.GetIP(c, config)
-        banned, err := redis.Exists(fmt.Sprintf("ban:%s", ip))
-        if err != nil {
-            logger.Error("ban check failed", "ip", ip, "err", err)
-            c.AbortWithStatus(http.StatusInternalServerError)
-            return
-        }
-        if banned {
-            c.AbortWithStatus(http.StatusForbidden)
-            return
-        }
-        c.Next()
-    }
+	return func(c *gin.Context) {
+		ip := cidr.GetIP(c, config)
+		banned, err := redis.Exists(fmt.Sprintf("ban:%s", ip))
+		if err != nil {
+			logger.Error("ban check failed", "ip", ip, "err", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		if banned {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+		c.Next()
+	}
 }
 
 func BanIP(redis *redis.Storage, ip string, duration time.Duration) error {
-    return redis.Set(fmt.Sprintf("ban:%s", ip), "1", duration)
+	return redis.Set(fmt.Sprintf("ban:%s", ip), "1", duration)
+}
+
+func Ban(c *gin.Context, redis *redis.Storage, duration time.Duration, config configuration.ReverseProxyMode) {
+	if !(duration == 0 || redis == nil) {
+		BanIP(redis, cidr.GetIP(c, config), duration)
+	}
 }

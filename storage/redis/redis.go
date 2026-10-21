@@ -83,3 +83,7 @@ func Script(script string) *redis.Script {
 func (S *Storage) RunScript(script *redis.Script, keys []string, args ...any) *redis.Cmd {
 	return script.Run(S.ctx, S.client, keys, args)
 }
+
+func (S *Storage) Ping(ctx context.Context) error {
+    return S.client.Ping(ctx).Err()
+}
