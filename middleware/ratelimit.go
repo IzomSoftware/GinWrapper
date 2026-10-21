@@ -6,6 +6,7 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
@@ -37,23 +38,23 @@ var script = redis.Script(`
     return 0
 `)
 
-func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ip := cidr.GetIP(c, reverseProxyConfig)
-		now := time.Now().UnixMilli()
+func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimitProtection, banDuration time.Duration, reverseProxyConfig configuration.ReverseProxyMode) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        ip := cidr.GetIP(c, reverseProxyConfig)
+        now := time.Now().UnixMilli()
 
-		result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
+        result, err := redis.RunScript(script, []string{ip}, rateLimitConfig.Rate, rateLimitConfig.Window*1000, now).Int64()
+        if err != nil {
+            c.Next()
+            return
+        }
 
-		if err != nil {
-			c.Next()
-			return
-		}
+        if result == 1 {
+            response.Abort(c, http.StatusTooManyRequests, reverseProxyConfig)
+            Ban(c, redis, banDuration, reverseProxyConfig)
+            return
+        }
 
-		if result == 1 {
-			c.AbortWithStatus(http.StatusTooManyRequests)
-			return
-		}
-
-		c.Next()
-	}
+        c.Next()
+    }
 }

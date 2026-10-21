@@ -8,6 +8,7 @@ import (
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
+	"github.com/IzomSoftware/GinWrapper/logger"
 	"github.com/IzomSoftware/GinWrapper/response"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
@@ -24,29 +25,34 @@ func CleanCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 	}
 }
 
-func ProbingCheck(redis *redis.Storage, threshold int64, window time.Duration, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Next()
+func ProbingCheck(redis *redis.Storage, threshold int64, window, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        if err := redis.Ping(c.Request.Context()); err != nil {
+            response.AbortInternalError(c, config)
+            return
+        }
 
-		status := c.Writer.Status()
-		if status != http.StatusNotFound && status != http.StatusForbidden {
-			return
-		}
+        c.Next()
 
-		ip := cidr.GetIP(c, config)
-		key := "probe:" + ip
-		i, err := redis.Incr(key)
-		if err != nil {
-			response.AbortInternalError(c, config)
-			return
-		}
+        status := c.Writer.Status()
+        if status != http.StatusNotFound && status != http.StatusForbidden {
+            return
+        }
 
-		if i == 1 {
-			redis.Expire(key, window)
-		} else if i >= threshold {
-			BanIP(redis, ip, banDuration)
-		}
-	}
+        ip := cidr.GetIP(c, config)
+        key := "probe:" + ip
+        i, err := redis.Incr(key)
+        if err != nil {
+            logger.Error("probing counter failed", "ip", ip, "err", err)
+            return
+        }
+
+        if i == 1 {
+            redis.Expire(key, window)
+        } else if i >= threshold {
+            BanIP(redis, ip, banDuration)
+        }
+    }
 }
 
 func IncompleteRouteCheck(registeredPaths []string, config configuration.ReverseProxyMode) gin.HandlerFunc {
