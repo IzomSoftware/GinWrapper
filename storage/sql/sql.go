@@ -43,23 +43,21 @@ func (S *Storage) Close() error {
 }
 
 func (S *Storage) ExecuteUpdate(query string, args ...any) error {
-	tx, err := S.pool.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+	_, err := S.pool.Exec(query, args...)
+	return err
+}
 
-	_, err = tx.Exec(query, args...)
-	if err != nil {
-		return err
-	}
-	return tx.Commit()
+func (S *Storage) ExecuteUpdateContext(ctx context.Context, query string, args ...any) error {
+	_, err := S.pool.ExecContext(ctx, query, args...)
+	return err
 }
 
 func (S *Storage) QueryRow(query string, args ...any) *sql.Row {
 	return S.pool.QueryRow(query, args...)
 }
-
+func (S *Storage) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+	return S.pool.QueryRowContext(ctx, query, args...)
+}
 func (S *Storage) Query(query string, args ...any) (*sql.Rows, error) {
 	return S.pool.Query(query, args...)
 }

@@ -2,8 +2,10 @@ package authentication
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/google/uuid"
 
 	"golang.org/x/crypto/bcrypt"
@@ -27,11 +29,16 @@ func GenerateUUID() string {
 }
 
 func GenerateOTP() (string, error) {
-	var bytes [3]byte
-	if _, err := rand.Read(bytes[:]); err != nil {
-		return "", err
+	buff := make([]byte, 4)
+	for {
+		if _, err := rand.Read(buff); err != nil {
+			return "", err
+		}
+		n := binary.BigEndian.Uint32(buff)
+		if n < 4294963200 {
+			return fmt.Sprintf("%06d", n%1000000), nil
+		}
 	}
-	return fmt.Sprintf("%06d", (uint32(bytes[0])<<16|uint32(bytes[1])<<8|uint32(bytes[2]))%1000000), nil
 }
 
 func GenerateRandomPassword() (string, error) {
