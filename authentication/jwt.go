@@ -45,7 +45,7 @@ type JWTManager struct {
 	accessTokenExpiry  time.Duration
 	refreshTokenExpiry time.Duration
 	sameSite           http.SameSite
-	revoked            RevokedChecker
+	checker            RevokedChecker
 }
 
 func GenerateRandomSecret(byteLen int) (string, error) {
@@ -139,7 +139,7 @@ func (J *JWTManager) ValidateJWT(jwtStr string, tokenType string) (*JWTClaims, e
 		return nil, ErrInvalidTokenType
 	}
 
-	if J.revoked != nil && claims.JTI != "" && J.revoked.Revoked(claims.JTI) {
+	if J.checker != nil && claims.JTI != "" && J.checker.Revoked(claims.JTI) {
 		return nil, ErrRevoked
 	}
 
@@ -166,6 +166,10 @@ func (J *JWTManager) SetCookie(c *gin.Context, name string, value string, maxAge
 		HttpOnly: J.httpOnly,
 		SameSite: J.sameSite,
 	})
+}
+
+func (J *JWTManager) SetRevokedChecker(checker RevokedChecker) {
+	J.checker = checker
 }
 
 func (J *JWTManager) SetAuthCookies(c *gin.Context, pair *JWTPair, maxAge int) {
