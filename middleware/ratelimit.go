@@ -53,7 +53,7 @@ func RateLimitCheck(redis *redis.Storage, rateLimitConfig configuration.RateLimi
 
 		if result == 1 {
 			response.Abort(c, http.StatusTooManyRequests, reverseProxyConfig)
-			Ban(c, redis, banDuration, reverseProxyConfig)
+			response.Ban(c, redis, banDuration, reverseProxyConfig)
 			return
 		}
 
