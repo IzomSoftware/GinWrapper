@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/IzomSoftware/GinWrapper/authentication"
 	"github.com/IzomSoftware/GinWrapper/configuration"
@@ -15,10 +17,11 @@ import (
 )
 
 type Server struct {
-	configuration *configuration.Config
-	storage       *storage.Storage
-	jwtManager    *authentication.JWTManager
-	Engine        *gin.Engine
+	configuration  *configuration.Config
+	storage        *storage.Storage
+	jwtManager     *authentication.JWTManager
+	Engine         *gin.Engine
+	invalidHandler *gin.HandlerFunc
 }
 
 func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager) *Server {
@@ -156,14 +159,50 @@ func (S *Server) LoadTemplates(path string) {
 	S.Engine.LoadHTMLGlob(path)
 }
 
-func (S *Server) LoadStatics(basePath string, path string) {
-	S.Engine.Static(basePath, path)
+func (S *Server) LoadStatics(protection bool, basePath string, path string) {
+	if protection {
+		S.Static(basePath, path, *S.invalidHandler)
+	} else {
+		S.Engine.Static(basePath, path)
+	}
 }
 
 func (S *Server) SetInvalid(handler gin.HandlerFunc) {
+	S.invalidHandler = &handler
 	S.Engine.HandleMethodNotAllowed = true
-	S.Engine.NoRoute(handler)
-	S.Engine.NoMethod(handler)
+	S.Engine.NoRoute(*S.invalidHandler)
+	S.Engine.NoMethod(*S.invalidHandler)
+}
+
+func (s *Server) Static(urlPrefix, fsRoot string, invalidHandler gin.HandlerFunc) {
+	fileServer := http.StripPrefix(urlPrefix, http.FileServer(http.Dir(fsRoot)))
+	root := fmt.Sprintf("%s%s", fsRoot, string(os.PathSeparator))
+
+	s.Engine.GET(urlPrefix+"/*filepath", func(c *gin.Context) {
+		filePath := filepath.Join(fsRoot, filepath.FromSlash(c.Param("filepath")))
+
+		if !strings.HasPrefix(fmt.Sprintf("%s%s", filePath, string(os.PathSeparator)), root) {
+			invalidHandler(c)
+			return
+		}
+
+		if info, err := os.Stat(filePath); err != nil || info.IsDir() {
+			invalidHandler(c)
+			return
+		}
+
+		fileServer.ServeHTTP(c.Writer, c.Request)
+	})
+}
+
+func (s *Server) StaticFile(urlPath, filePath string, invalidHandler gin.HandlerFunc) {
+	s.Engine.GET(urlPath, func(c *gin.Context) {
+		if _, err := os.Stat(filePath); err != nil {
+			invalidHandler(c)
+			return
+		}
+		http.ServeFile(c.Writer, c.Request, filePath)
+	})
 }
 
 func (S *Server) ListenAndServe() error {

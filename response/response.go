@@ -60,32 +60,40 @@ func InvalidResponse(c *gin.Context) {
 	c.String(http.StatusNotFound, "404 Not Found")
 }
 
-func ProtectedInvalidResponse(engine *gin.Engine, redis *redis.Storage, threshold int64, window time.Duration, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
-	paths := RegisteredPaths(engine)
+func ProtectedInvalidResponse(engine *gin.Engine, redisStore *redis.Storage, threshold, windowSeconds int64, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+	registeredPaths := RegisteredPaths(engine)
+
 	return func(c *gin.Context) {
 		ip := cidr.GetIP(c, config)
-		key := "probe:" + ip
-		i, err := redis.RunScript(pathScript, []string{key}, int64(window.Seconds())).Int64()
+
+		probeKey := fmt.Sprintf("probe:%s", ip)
+		probeCount, err := redisStore.RunScript(pathScript, []string{probeKey}, windowSeconds).Int64()
 		if err != nil {
 			logger.Error("probing counter failed", "ip", ip, "err", err)
+			InvalidResponse(c)
 			return
 		}
-		if i >= threshold {
+
+		if probeCount >= threshold {
 			AbortForbidden(c, config)
-			BanIP(redis, ip, banDuration)
+			BanIP(redisStore, ip, banDuration)
 			return
 		}
-		parts := strings.Split(strings.TrimPrefix(c.Request.URL.Path, "/"), "/")
-		if parts[0] != "" {
-			base := "/" + parts[0]
-			for _, registered := range paths {
-				if strings.HasPrefix(strings.ToLower(registered), strings.ToLower(base)) {
+
+		trimmed := strings.TrimPrefix(c.Request.URL.Path, "/")
+		urlParts := strings.Split(trimmed, "/")
+
+		if len(urlParts) > 0 && urlParts[0] != "" {
+			basePath := fmt.Sprintf("/%s", urlParts[0])
+			for _, registeredPath := range registeredPaths {
+				if strings.HasPrefix(strings.ToLower(registeredPath), strings.ToLower(basePath)) {
 					AbortForbidden(c, config)
-					BanIP(redis, ip, banDuration)
+					BanIP(redisStore, ip, banDuration)
 					return
 				}
 			}
 		}
+
 		InvalidResponse(c)
 	}
 }
