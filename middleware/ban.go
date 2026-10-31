@@ -27,4 +27,3 @@ func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.H
 		c.Next()
 	}
 }
-
