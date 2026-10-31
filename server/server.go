@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -41,10 +42,10 @@ func NewServer(configuration *configuration.Config, storage *storage.Storage, jw
 	}
 
 	return &Server{
-		configuration:  configuration,
-		storage:        storage,
-		jwtManager:     jwtManager,
-		Engine:         engine,
+		configuration: configuration,
+		storage:       storage,
+		jwtManager:    jwtManager,
+		Engine:        engine,
 	}
 }
 
@@ -175,6 +176,8 @@ func (S *Server) SetInvalid(handler gin.HandlerFunc) {
 }
 
 func (s *Server) Static(urlPrefix, fsRoot string, invalidHandler gin.HandlerFunc) {
+	urlPrefix = path.Clean("/" + urlPrefix)
+	fsRoot = filepath.Clean(fsRoot)
 	fileServer := http.StripPrefix(urlPrefix, http.FileServer(http.Dir(fsRoot)))
 	root := fmt.Sprintf("%s%s", fsRoot, string(os.PathSeparator))
 
