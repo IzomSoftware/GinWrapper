@@ -54,10 +54,12 @@ func RegisteredPaths(engine *gin.Engine) []string {
 	}
 	return result
 }
-func NoRoute(c *gin.Context) {
+// Renamed to invalidresponse because of potential usage on NoMethod
+func InvalidResponse(c *gin.Context) {
 	c.String(http.StatusNotFound, "404 Not Found")
 }
-func ProtectedNoRoute(engine *gin.Engine, redis *redis.Storage, threshold int64, window, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+
+func ProtectedInvalidResponse(engine *gin.Engine, redis *redis.Storage, threshold int64, window, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
 	paths := RegisteredPaths(engine)
 	return func(c *gin.Context) {
 		ip := cidr.GetIP(c, config)
@@ -83,6 +85,6 @@ func ProtectedNoRoute(engine *gin.Engine, redis *redis.Storage, threshold int64,
 				}
 			}
 		}
-		NoRoute(c)
+		InvalidResponse(c)
 	}
 }
