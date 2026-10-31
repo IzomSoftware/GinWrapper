@@ -54,6 +54,7 @@ func RegisteredPaths(engine *gin.Engine) []string {
 	}
 	return result
 }
+
 // Renamed to invalidresponse because of potential usage on NoMethod
 func InvalidResponse(c *gin.Context) {
 	c.String(http.StatusNotFound, "404 Not Found")
