@@ -8,8 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 func CleanCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uriPath := c.Request.URL.Path
@@ -20,4 +18,3 @@ func CleanCheck(config configuration.ReverseProxyMode) gin.HandlerFunc {
 		c.Next()
 	}
 }
-
