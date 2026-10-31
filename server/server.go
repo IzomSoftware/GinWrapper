@@ -161,6 +161,7 @@ func (S *Server) LoadStatics(basePath string, path string) {
 }
 
 func (S *Server) SetInvalid(handler gin.HandlerFunc) {
+	S.Engine.HandleMethodNotAllowed = true
 	S.Engine.NoRoute(handler)
 	S.Engine.NoMethod(handler)
 }
