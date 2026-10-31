@@ -24,7 +24,7 @@ type Server struct {
 	invalidHandler *gin.HandlerFunc
 }
 
-func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager) *Server {
+func NewServer(configuration *configuration.Config, storage *storage.Storage, jwtManager *authentication.JWTManager, invalidHandler *gin.HandlerFunc) *Server {
 	if !configuration.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -41,10 +41,11 @@ func NewServer(configuration *configuration.Config, storage *storage.Storage, jw
 	}
 
 	return &Server{
-		configuration: configuration,
-		storage:       storage,
-		jwtManager:    jwtManager,
-		Engine:        engine,
+		configuration:  configuration,
+		storage:        storage,
+		jwtManager:     jwtManager,
+		Engine:         engine,
+		invalidHandler: invalidHandler,
 	}
 }
 
