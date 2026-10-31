@@ -160,8 +160,9 @@ func (S *Server) LoadStatics(basePath string, path string) {
 	S.Engine.Static(basePath, path)
 }
 
-func (S *Server) SetNoRoute(handler gin.HandlerFunc) {
+func (S *Server) SetInvalid(handler gin.HandlerFunc) {
 	S.Engine.NoRoute(handler)
+	S.Engine.NoMethod(handler)
 }
 
 func (S *Server) ListenAndServe() error {
