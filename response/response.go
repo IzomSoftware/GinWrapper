@@ -1,6 +1,7 @@
 package response
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -8,7 +9,6 @@ import (
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
 	"github.com/IzomSoftware/GinWrapper/logger"
-	"github.com/IzomSoftware/GinWrapper/middleware"
 	"github.com/IzomSoftware/GinWrapper/storage/redis"
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +35,17 @@ func AbortUnauthorized(c *gin.Context, config configuration.ReverseProxyMode) {
 func AbortInternalError(c *gin.Context, config configuration.ReverseProxyMode) {
 	Abort(c, http.StatusInternalServerError, config)
 }
+
+func BanIP(redis *redis.Storage, ip string, duration time.Duration) error {
+	return redis.Set(fmt.Sprintf("ban:%s", ip), "1", duration)
+}
+
+func Ban(c *gin.Context, redis *redis.Storage, duration time.Duration, config configuration.ReverseProxyMode) {
+	if duration != 0 && redis != nil {
+		BanIP(redis, cidr.GetIP(c, config), duration)
+	}
+}
+
 func RegisteredPaths(engine *gin.Engine) []string {
 	routes := engine.Routes()
 	result := make([]string, 0, len(routes))
@@ -57,14 +68,17 @@ func ProtectedNoRoute(engine *gin.Engine, redis *redis.Storage, threshold int64,
 			return
 		}
 		if i >= threshold {
-			middleware.BanIP(redis, ip, banDuration)
+			AbortForbidden(c, config)
+			BanIP(redis, ip, banDuration)
+			return
 		}
 		parts := strings.Split(strings.TrimPrefix(c.Request.URL.Path, "/"), "/")
 		if parts[0] != "" {
 			base := "/" + parts[0]
 			for _, registered := range paths {
 				if strings.HasPrefix(strings.ToLower(registered), strings.ToLower(base)) {
-					middleware.BanIP(redis, ip, banDuration)
+					AbortForbidden(c, config)
+					BanIP(redis, ip, banDuration)
 					return
 				}
 			}

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/IzomSoftware/GinWrapper/cidr"
 	"github.com/IzomSoftware/GinWrapper/configuration"
@@ -29,12 +28,3 @@ func BanCheck(redis *redis.Storage, config configuration.ReverseProxyMode) gin.H
 	}
 }
 
-func BanIP(redis *redis.Storage, ip string, duration time.Duration) error {
-	return redis.Set(fmt.Sprintf("ban:%s", ip), "1", duration)
-}
-
-func Ban(c *gin.Context, redis *redis.Storage, duration time.Duration, config configuration.ReverseProxyMode) {
-	if duration != 0 && redis != nil {
-		BanIP(redis, cidr.GetIP(c, config), duration)
-	}
-}

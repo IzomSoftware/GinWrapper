@@ -17,21 +17,21 @@ func Authentication(jwtManager *authentication.JWTManager, redis *redis.Storage,
 		header := c.GetHeader("Authorization")
 		if header == "" {
 			response.AbortUnauthorized(c, config)
-			Ban(c, redis, banDuration, config)
+			response.Ban(c, redis, banDuration, config)
 			return
 		}
 
 		parts := strings.SplitN(header, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
 			response.AbortUnauthorized(c, config)
-			Ban(c, redis, banDuration, config)
+			response.Ban(c, redis, banDuration, config)
 			return
 		}
 
 		claims, err := jwtManager.ValidateJWT(parts[1], "access")
 		if err != nil {
 			response.AbortUnauthorized(c, config)
-			Ban(c, redis, banDuration, config)
+			response.Ban(c, redis, banDuration, config)
 			return
 		}
 
@@ -57,14 +57,14 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redi
 		}
 		if token == "" {
 			response.AbortUnauthorized(c, config)
-			Ban(c, redis, banDuration, config)
+			response.Ban(c, redis, banDuration, config)
 			return
 		}
 
 		claims, err := jwtManager.ValidateJWT(token, "access")
 		if err != nil {
 			response.AbortUnauthorized(c, config)
-			Ban(c, redis, banDuration, config)
+			response.Ban(c, redis, banDuration, config)
 			return
 		}
 
@@ -107,7 +107,7 @@ func CSRFCheck(redis *redis.Storage, banDuration time.Duration, config configura
 			reverseProxyMode := config.ReverseProxyMode
 			response.AbortForbidden(c, reverseProxyMode)
 
-			Ban(c, redis, banDuration, reverseProxyMode)
+			response.Ban(c, redis, banDuration, reverseProxyMode)
 			return
 		}
 
