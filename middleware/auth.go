@@ -42,7 +42,7 @@ func Authentication(jwtManager *authentication.JWTManager, redis *redis.Storage,
 	}
 }
 
-func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redis.Storage, banDuration time.Duration, config configuration.ReverseProxyMode) gin.HandlerFunc {
+func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redis.Storage, banDuration time.Duration, config configuration.ReverseProxyMode, extraClearCookies ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := ""
 		if authHeader := c.GetHeader("Authorization"); authHeader != "" {
@@ -56,18 +56,24 @@ func AuthenticationWithCookie(jwtManager *authentication.JWTManager, redis *redi
 			}
 		}
 		if token == "" {
+			jwtManager.ClearAuthCookies(c)
+			for _, name := range extraClearCookies {
+				c.SetCookie(name, "", -1, "/", "", false, false)
+			}
 			response.AbortUnauthorized(c, config)
 			response.Ban(c, redis, banDuration, config)
 			return
 		}
-
 		claims, err := jwtManager.ValidateJWT(token, "access")
 		if err != nil {
+			jwtManager.ClearAuthCookies(c)
+			for _, name := range extraClearCookies {
+				c.SetCookie(name, "", -1, "/", "", false, false)
+			}
 			response.AbortUnauthorized(c, config)
 			response.Ban(c, redis, banDuration, config)
 			return
 		}
-
 		c.Set("claims", claims)
 		c.Set("uuid", claims.Uuid)
 		c.Set("username", claims.Username)
